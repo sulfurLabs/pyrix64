@@ -30,21 +30,21 @@
 
 typedef enum
 {
-    Pyrix64opNop   = 0x00,
-    Pyrix64opHalt  = 0x01,
-    Pyrix64opMov   = 0x10,
-    Pyrix64opAdd   = 0x11,
-    Pyrix64opSub   = 0x12,
-    Pyrix64opAnd   = 0x13,
-    Pyrix64opOr    = 0x14,
-    Pyrix64opXor   = 0x15,
-    Pyrix64opNot   = 0x16,
-    Pyrix64opMovI  = 0x20,
-    Pyrix64opLoad  = 0x30,
-    Pyrix64opStore = 0x31,
-    Pyrix64opJmp   = 0x40,
-    Pyrix64opBeq   = 0x41,
-    Pyrix64opBne   = 0x42
+    Pyrix64opNop   = 0x00, // nothing
+    Pyrix64opHalt  = 0x01, // stops
+    Pyrix64opMov   = 0x10, // copy one register to another
+    Pyrix64opAdd   = 0x11, // addition
+    Pyrix64opSub   = 0x12, // subtraction
+    Pyrix64opAnd   = 0x13, // keep 2 bits if they r 1
+    Pyrix64opOr    = 0x14, // bits which r 1 in either
+    Pyrix64opXor   = 0x15, // bits which are different
+    Pyrix64opNot   = 0x16, // flips
+    Pyrix64opMovI  = 0x20, // number into register
+    Pyrix64opLoad  = 0x30, // from memory
+    Pyrix64opStore = 0x31, // into memory
+    Pyrix64opJmp   = 0x40, // jump
+    Pyrix64opBeq   = 0x41, // jump if the values match
+    Pyrix64opBne   = 0x42  // jump if the values dont match
 
 } Pyrix64Opcode;
 
