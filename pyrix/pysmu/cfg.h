@@ -31,6 +31,9 @@
 //general purpose registers
 #define Pyrix64RegisterCount 32
 
+#define Pyrix64RegisterZero 0
+#define Pyrix64RegisterRa 31
+
 #define Pyrix64RamSize 4096
 #define Pyrix64RamAccessSize 8
 

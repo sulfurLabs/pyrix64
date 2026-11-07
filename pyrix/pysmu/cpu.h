@@ -34,11 +34,24 @@
 
 typedef struct
 {
-    uint64_t Registers[Pyrix64RegisterCount]; //64 bit
-    uint32_t Pc; // pc == program counter, not personal computer
+    uint64_t Registers[Pyrix64RegisterCount]; //64 bit, r0 to r31
+    uint64_t Sp; // stack pointer
+    uint64_t Fp; // frame pointer
+    uint64_t Pc; // pc == program counter, not personal computer
     bool Halted; // true if it really stopped
 
 } Pyrix64Cpu;
+
+uint64_t Pyrix64RegRead(
+    const Pyrix64Cpu *Cpu,
+    uint8_t RegIndex
+);
+
+void Pyrix64RegWrite(
+    Pyrix64Cpu *Cpu,
+    uint8_t RegIndex,
+    uint64_t Value
+);
 
 bool Pyrix64Execute(
     Pyrix64Cpu *Cpu,

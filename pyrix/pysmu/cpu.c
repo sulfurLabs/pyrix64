@@ -28,6 +28,47 @@
 #include "cpu.h"
 #include "instr.h"
 
+//reads a register
+// r0 is always zero, like riscv
+uint64_t Pyrix64RegRead(
+    const Pyrix64Cpu *Cpu,
+    uint8_t RegIndex
+){
+    if (RegIndex >= Pyrix64RegisterCount)
+    {
+        printf(":: error: register read out of range (r%u)\n", RegIndex);
+
+        return 0;
+    }
+    if (RegIndex == Pyrix64RegisterZero)
+    {
+        return 0;
+    }
+
+    return Cpu->Registers[RegIndex];
+}
+
+//writes a register
+// cuz r0 is zero, writes to r0 r ignored
+void Pyrix64RegWrite(
+    Pyrix64Cpu *Cpu,
+    uint8_t RegIndex,
+    uint64_t Value
+) {
+    if (RegIndex >= Pyrix64RegisterCount)
+    {
+        printf(":: error: register write out of range (r%u)\n", RegIndex);
+
+        return;
+    }
+    if (RegIndex == Pyrix64RegisterZero)
+    {
+        return;
+    }
+
+    Cpu->Registers[RegIndex] = Value;
+}
+
 //instruction fetch
 bool Pyrix64Execute(
     Pyrix64Cpu *Cpu,

@@ -29,20 +29,8 @@
 
 #include "cfg.h"
 #include "cpu.h"
+#include "enc.h"
 #include "pyrix/isa.h"
-
-// opcode + destination register + register + register
-#define Pyrix64EncodeR(Op, Rd, Rs1, Rs2)  \
-    (((uint32_t)(Op) << 24) |             \
-    ((uint32_t)(Rd)  << 19) |             \
-    ((uint32_t)(Rs1) << 14) |             \
-    ((uint32_t)(Rs2) << 9))
-
-// opcode + destination register + immediate val
-#define Pyrix64EncodeI(Op, Rd, Imm)       \
-    (((uint32_t)(Op) << 24) |             \
-    ((uint32_t)(Rd)  << 19) |             \
-    ((uint32_t)(Imm) & 0x7FFFFu))
 
 int main(void)
 {

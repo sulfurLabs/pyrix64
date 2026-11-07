@@ -31,9 +31,11 @@ all: pysmu pyx
 
 pysmu:
 	$(MAKE) -C pyrix/pysmu
+	./build/pysmu/pysmu
 
 pyx:
 	$(MAKE) -C pyrix/pyx
+	./build/pyx/pyx
 
 clean:
 	$(MAKE) -C pyrix/pysmu clean

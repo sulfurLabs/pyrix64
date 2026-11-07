@@ -98,7 +98,7 @@ static bool Pyrix64InstrMov(
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
 
-    Cpu->Registers[Rd] = Cpu->Registers[Rs1];
+    Pyrix64RegWrite(Cpu, Rd, Pyrix64RegRead(Cpu, Rs1));
 
     return true;
 }
@@ -114,7 +114,7 @@ static bool Pyrix64InstrAdd(
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
     uint8_t Rs2 = Pyrix64DecodeRs2(Instruction);
 
-    Cpu->Registers[Rd] = Cpu->Registers[Rs1] + Cpu->Registers[Rs2];
+    Pyrix64RegWrite(Cpu, Rd, Pyrix64RegRead(Cpu, Rs1) + Pyrix64RegRead(Cpu, Rs2));
 
     return true;
 }
@@ -130,7 +130,7 @@ static bool Pyrix64InstrSub(
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
     uint8_t Rs2 = Pyrix64DecodeRs2(Instruction);
 
-    Cpu->Registers[Rd] = Cpu->Registers[Rs1] - Cpu->Registers[Rs2];
+    Pyrix64RegWrite(Cpu, Rd, Pyrix64RegRead(Cpu, Rs1) - Pyrix64RegRead(Cpu, Rs2));
 
     return true;
 }
@@ -146,7 +146,7 @@ static bool Pyrix64InstrAnd(
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
     uint8_t Rs2 = Pyrix64DecodeRs2(Instruction);
 
-    Cpu->Registers[Rd] = Cpu->Registers[Rs1] & Cpu->Registers[Rs2];
+    Pyrix64RegWrite(Cpu, Rd, Pyrix64RegRead(Cpu, Rs1) & Pyrix64RegRead(Cpu, Rs2));
 
     return true;
 }
@@ -162,7 +162,7 @@ static bool Pyrix64InstrOr(
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
     uint8_t Rs2 = Pyrix64DecodeRs2(Instruction);
 
-    Cpu->Registers[Rd] = Cpu->Registers[Rs1] | Cpu->Registers[Rs2];
+    Pyrix64RegWrite(Cpu, Rd, Pyrix64RegRead(Cpu, Rs1) | Pyrix64RegRead(Cpu, Rs2));
 
     return true;
 }
@@ -178,7 +178,7 @@ static bool Pyrix64InstrXor(
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
     uint8_t Rs2 = Pyrix64DecodeRs2(Instruction);
 
-    Cpu->Registers[Rd] = Cpu->Registers[Rs1] ^ Cpu->Registers[Rs2];
+    Pyrix64RegWrite(Cpu, Rd, Pyrix64RegRead(Cpu, Rs1) ^ Pyrix64RegRead(Cpu, Rs2));
 
     return true;
 }
@@ -193,7 +193,7 @@ static bool Pyrix64InstrNot(
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
 
-    Cpu->Registers[Rd] = ~Cpu->Registers[Rs1];
+    Pyrix64RegWrite(Cpu, Rd, ~Pyrix64RegRead(Cpu, Rs1));
 
     return true;
 }
@@ -207,7 +207,7 @@ static bool Pyrix64InstrMovI(
 
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
 
-    Cpu->Registers[Rd] = (uint64_t)Pyrix64DecodeImmediate(Instruction);
+    Pyrix64RegWrite(Cpu, Rd, (uint64_t)Pyrix64DecodeImmediate(Instruction));
 
     return true;
 }
@@ -226,7 +226,7 @@ static bool Pyrix64InstrLoad(
         return false;
     }
 
-    Cpu->Registers[Rd] = Value;
+    Pyrix64RegWrite(Cpu, Rd, Value);
 
     return true;
 }
@@ -239,7 +239,7 @@ static bool Pyrix64InstrStore(
     uint8_t Source = Pyrix64DecodeRd(Instruction);
     uint16_t Address = Pyrix64DecodeAddress(Instruction);
 
-    if (!Pyrix64RamStore(Ram, Address, Cpu->Registers[Source]))
+    if (!Pyrix64RamStore(Ram, Address, Pyrix64RegRead(Cpu, Source)))
     {
         return false;
     }
