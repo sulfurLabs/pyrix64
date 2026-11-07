@@ -34,6 +34,20 @@
 #define Pyrix64RegisterZero 0
 #define Pyrix64RegisterRa 31
 
+//stack pointers for every pl
+#define Pyrix64StackPointerCount 4
+// SP0 PL0
+// SP1 PL1
+// SP2 PL2
+// SP3 PL3
+
+//privilege levels
+#define Pyrix64PrivilegeLevelCount 4
+// PL0  User
+// PL1  Driver
+// PL2  Kernel
+// PL3  Secure Monitor
+
 #define Pyrix64RamSize 4096
 #define Pyrix64RamAccessSize 8
 

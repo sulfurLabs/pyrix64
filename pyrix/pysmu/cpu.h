@@ -32,13 +32,26 @@
 #include "ram.h"
 #include "cfg.h"
 
+//privilege levels (PL)
+typedef enum
+{
+    Pyrix64PLUser = 0,
+    Pyrix64PLDriver = 1,
+    Pyrix64PLKernel = 2,
+    Pyrix64PLSecureMonitor = 3
+} Pyrix64PrivilegeLevel;
+
 typedef struct
 {
     uint64_t Registers[Pyrix64RegisterCount]; //64 bit, r0 to r31
-    uint64_t Sp; // stack pointer
+    uint64_t StackPointers[Pyrix64StackPointerCount]; //SP0-3 each per pl
     uint64_t Fp; // frame pointer
     uint64_t Pc; // pc == program counter, not personal computer
     uint64_t Status; // status register, bit layout to be defined later
+    uint64_t Epc; // exception program counter
+    uint64_t Cause; // reason of an interrupt/exception
+    uint64_t Tvec; // trap vector
+    Pyrix64PrivilegeLevel CurrentPL; // current privilege level
     bool Halted; // true if it really stopped
 
 } Pyrix64Cpu;
@@ -56,10 +69,68 @@ void Pyrix64RegWrite(
     uint64_t Value
 );
 
+bool Pyrix64StackPointerRead(
+    const Pyrix64Cpu *Cpu,
+    uint8_t SpIndex,
+    uint64_t *Value
+);
+
+bool Pyrix64StackPointerWrite(
+    Pyrix64Cpu *Cpu,
+    uint8_t SpIndex,
+    uint64_t Value
+);
+
+uint8_t Pyrix64ActiveStackPointerIndex(
+    const Pyrix64Cpu *Cpu
+);
+
+uint64_t Pyrix64ActiveStackPointerRead(
+    const Pyrix64Cpu *Cpu
+);
+
+void Pyrix64ActiveStackPointerWrite(
+    Pyrix64Cpu *Cpu,
+    uint64_t Value
+);
+
+Pyrix64PrivilegeLevel Pyrix64PrivilegeLevelRead(
+    const Pyrix64Cpu *Cpu
+);
+
+bool Pyrix64PrivilegeLevelWrite(
+    Pyrix64Cpu *Cpu,
+    Pyrix64PrivilegeLevel PL
+);
+
 uint64_t Pyrix64StatusRead(
     const Pyrix64Cpu *Cpu
 );
 void Pyrix64StatusWrite(
+    Pyrix64Cpu *Cpu,
+    uint64_t Value
+);
+
+uint64_t Pyrix64EpcRead(
+    const Pyrix64Cpu *Cpu
+);
+void Pyrix64EpcWrite(
+    Pyrix64Cpu *Cpu,
+    uint64_t Value
+);
+
+uint64_t Pyrix64CauseRead(
+    const Pyrix64Cpu *Cpu
+);
+void Pyrix64CauseWrite(
+    Pyrix64Cpu *Cpu,
+    uint64_t Value
+);
+
+uint64_t Pyrix64TvecRead(
+    const Pyrix64Cpu *Cpu
+);
+void Pyrix64TvecWrite(
     Pyrix64Cpu *Cpu,
     uint64_t Value
 );

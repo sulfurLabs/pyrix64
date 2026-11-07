@@ -90,6 +90,142 @@ void Pyrix64StatusWrite(
     Cpu->Status = Value;
 }
 
+//exception program counter
+uint64_t Pyrix64EpcRead(
+    const Pyrix64Cpu *Cpu
+){
+    return Cpu->Epc;
+}
+void Pyrix64EpcWrite(
+    Pyrix64Cpu *Cpu,
+    uint64_t Value
+){
+    Cpu->Epc = Value;
+}
+
+//cause of interrupt/exception
+uint64_t Pyrix64CauseRead(
+    const Pyrix64Cpu *Cpu
+){
+    return Cpu->Cause;
+}
+void Pyrix64CauseWrite(
+    Pyrix64Cpu *Cpu,
+    uint64_t Value
+){
+    Cpu->Cause = Value;
+}
+
+//trap vector
+uint64_t Pyrix64TvecRead(
+    const Pyrix64Cpu *Cpu
+){
+    return Cpu->Tvec;
+}
+void Pyrix64TvecWrite(
+    Pyrix64Cpu *Cpu,
+    uint64_t Value
+){
+    Cpu->Tvec = Value;
+}
+
+//stack pointers
+// one per privilege level, SP0-3
+
+//reads a stack pointer
+bool Pyrix64StackPointerRead(
+    const Pyrix64Cpu *Cpu,
+    uint8_t SpIndex,
+    uint64_t *Value
+){
+    if (SpIndex >= Pyrix64StackPointerCount)
+    {
+        printf(":: error: stack pointer read out of range (sp%u)\n", SpIndex);
+
+        return false;
+    }
+
+    *Value = Cpu->StackPointers[SpIndex];
+
+    return true;
+}
+
+//writes a stack pointer
+bool Pyrix64StackPointerWrite(
+    Pyrix64Cpu *Cpu,
+    uint8_t SpIndex,
+    uint64_t Value
+){
+    if (SpIndex >= Pyrix64StackPointerCount)
+    {
+        printf(":: error: stack pointer write out of range (sp%u)\n", SpIndex);
+
+        return false;
+    }
+
+    Cpu->StackPointers[SpIndex] = Value;
+
+    return true;
+}
+
+//index of sp for current pl
+// from CurrentPL
+uint8_t Pyrix64ActiveStackPointerIndex(
+    const Pyrix64Cpu *Cpu
+){
+    if ((uint8_t)Cpu->CurrentPL >= Pyrix64StackPointerCount)
+    {
+        //shouldnt ever happen
+        // its validated when writing
+        printf(":: error: no stack pointer for this privilege level\n");
+
+        return 0;
+    }
+
+    return (uint8_t)Cpu->CurrentPL;
+}
+
+// reads sp of current pl
+uint64_t Pyrix64ActiveStackPointerRead(
+    const Pyrix64Cpu *Cpu
+){
+    return Cpu->StackPointers[Pyrix64ActiveStackPointerIndex(Cpu)];
+}
+
+//writes sp of current pl
+void Pyrix64ActiveStackPointerWrite(
+    Pyrix64Cpu *Cpu,
+    uint64_t Value
+){
+    Cpu->StackPointers[Pyrix64ActiveStackPointerIndex(Cpu)] = Value;
+}
+
+//read current pl
+Pyrix64PrivilegeLevel Pyrix64PrivilegeLevelRead(
+    const Pyrix64Cpu *Cpu
+){
+    return Cpu->CurrentPL;
+}
+
+//change current pl
+//TODO:
+// automatic stack switching
+bool Pyrix64PrivilegeLevelWrite(
+    Pyrix64Cpu *Cpu,
+    Pyrix64PrivilegeLevel PL
+){
+    if ((uint8_t)PL >= Pyrix64PrivilegeLevelCount)
+    {
+        printf(":: error: invalid privilege level (%u)\n", (uint8_t)PL);
+
+        return false;
+    }
+
+    Cpu->CurrentPL = PL;
+
+    return true;
+}
+
 //instruction fetch
 bool Pyrix64Execute(
     Pyrix64Cpu *Cpu,
