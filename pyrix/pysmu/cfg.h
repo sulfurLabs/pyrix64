@@ -28,4 +28,10 @@
 
 #define PYSMVER "v0.0.1"
 
+//general purpose registers
+#define Pyrix64RegisterCount 32
+
+#define Pyrix64RamSize 4096
+#define Pyrix64RamAccessSize 8
+
 #endif /*p64cfgh */

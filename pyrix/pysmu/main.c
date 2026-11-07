@@ -24,15 +24,12 @@
  */
 
 #include <inttypes.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
 #include "cfg.h"
+#include "cpu.h"
 #include "pyrix/isa.h"
-
-// general purpose registers
-#define Pyrix64RegisterCount 32
 
 // opcode + destination register + register + register
 #define Pyrix64EncodeR(Op, Rd, Rs1, Rs2)  \
@@ -47,110 +44,12 @@
     ((uint32_t)(Rd)  << 19) |             \
     ((uint32_t)(Imm) & 0x7FFFFu))
 
-typedef struct
-{
-    uint64_t Registers[Pyrix64RegisterCount]; // 64 bit
-    uint32_t Pc; // pc == program counter, not personal computer
-    bool Halted; // true if it really stopped
-
-} Pyrix64Cpu;
-
-static int64_t Pyrix64DecodeImmediate(uint32_t Instruction)
-{
-    int64_t Value = Instruction & 0x7FFFFu;
-
-    // 19 bits
-    if (Value & (1LL << 18))
-    {
-        Value -= (1LL << 19);
-    }
-
-    return Value;
-}
-
-static bool Pyrix64Execute(
-    Pyrix64Cpu *Cpu,
-    const uint32_t *Program,
-    uint32_t ProgramSize
-){
-    while (!Cpu->Halted)
-    {
-        if (Cpu->Pc >= ProgramSize)
-        {
-            printf("program counter out of range \n");
-
-            return false;
-        }
-
-        uint32_t Instruction = Program[Cpu->Pc++];
-        uint8_t Opcode = (Instruction >> 24) & 0xFF;
-        uint8_t Rd = (Instruction >> 19) & 0x1F;
-        uint8_t Rs1 = (Instruction >> 14) & 0x1F;
-        uint8_t Rs2 = (Instruction >> 9) & 0x1F;
-
-        switch (Opcode)
-        {
-            case Pyrix64opNop:
-                break;
-
-            case Pyrix64opHalt:
-                Cpu->Halted = true;
-
-                break;
-
-            case Pyrix64opMov:
-                Cpu->Registers[Rd] = Cpu->Registers[Rs1];
-
-                break;
-
-            case Pyrix64opAdd:
-                Cpu->Registers[Rd] = Cpu->Registers[Rs1] + Cpu->Registers[Rs2];
-
-                break;
-
-            case Pyrix64opSub:
-                Cpu->Registers[Rd] = Cpu->Registers[Rs1] - Cpu->Registers[Rs2];
-
-                break;
-
-            case Pyrix64opAnd:
-                Cpu->Registers[Rd] = Cpu->Registers[Rs1] & Cpu->Registers[Rs2];
-
-                break;
-
-            case Pyrix64opOr:
-                Cpu->Registers[Rd] = Cpu->Registers[Rs1] | Cpu->Registers[Rs2];
-
-                break;
-
-            case Pyrix64opXor:
-                Cpu->Registers[Rd] = Cpu->Registers[Rs1] ^ Cpu->Registers[Rs2];
-
-                break;
-
-            case Pyrix64opNot:
-                Cpu->Registers[Rd] = ~Cpu->Registers[Rs1];
-
-                break;
-
-            case Pyrix64opMovI:
-                Cpu->Registers[Rd] = (uint64_t)Pyrix64DecodeImmediate(Instruction);
-
-                break;
-
-            default:
-                printf("Error: unknown opcode 0x%02X\n", Opcode);
-
-                return false;
-        }
-    }
-
-    return true;
-}
-
 int main(void)
 {
     Pyrix64Cpu Cpu = {0};
+    Pyrix64Ram Ram;
+
+    Pyrix64RamInit(&Ram);
 
     /* custom program till we have a compiler */
     const uint32_t Program[] =
@@ -163,7 +62,9 @@ int main(void)
         Pyrix64EncodeR(Pyrix64opOr, 6, 1, 2),
         Pyrix64EncodeR(Pyrix64opXor, 7, 1, 2),
         Pyrix64EncodeR(Pyrix64opNot, 8, 2, 0),
-        Pyrix64EncodeR(Pyrix64opHalt, 0, 0, 0)
+        Pyrix64EncodeI(Pyrix64opStore, 1, 0x100),
+        Pyrix64EncodeI(Pyrix64opLoad, 9, 0x100),
+        Pyrix64EncodeI(Pyrix64opHalt, 0, 0)
     };
 
     uint32_t ProgramSize = sizeof(Program) / sizeof(Program[0]);
@@ -171,7 +72,7 @@ int main(void)
     printf("::  pyrix64 pysmu emulator\n");
     printf("::  starting program \n");
 
-    if (!Pyrix64Execute(&Cpu, Program, ProgramSize))
+    if (!Pyrix64Execute(&Cpu, &Ram, Program, ProgramSize))
     {
         return 1;
     }
@@ -187,6 +88,7 @@ int main(void)
     printf(" - R7 = %" PRIu64 "\n", Cpu.Registers[7]);
 
     printf(" - R8 = 0x%016" PRIX64 "\n", Cpu.Registers[8]);
+    printf(" - R9 = %" PRIu64 "\n", Cpu.Registers[9]);
 
     return 0;
 }

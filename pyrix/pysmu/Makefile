@@ -26,7 +26,7 @@
 include ../../common.mk
 
 TARGET := $(BUILD_DIR)/pysmu/pysmu
-SOURCES := main.c
+SOURCES := main.c cpu.c instr.c ram.c
 
 .PHONY: all clean
 
