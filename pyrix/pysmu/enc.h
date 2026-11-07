@@ -7,6 +7,9 @@
  * FILE: enc.h
  * DESC.: encoding macros
  *
+ * CREATED BY: emex
+ * UPDATED BY: offihito
+ *
  * This file is part of pyrix64.
  *
  * pyrix64 is free software: you can redistribute it and/or modify
@@ -23,22 +26,9 @@
  * https://www.gnu.org/licenses/gpl-3.0.html
  */
 
-#ifndef Pyrix64EncH
-#define Pyrix64EncH 1
+#ifndef Pyrix64PysmuEncH
+#define Pyrix64PysmuEncH 1
 
-#include <stdint.h>
+#include "pyrix/enc.h"
 
-// opcode + destination register + register + register
-#define Pyrix64EncodeR(Op, Rd, Rs1, Rs2)  \
-    (((uint32_t)(Op) << 24) |             \
-    ((uint32_t)(Rd)  << 19) |             \
-    ((uint32_t)(Rs1) << 14) |             \
-    ((uint32_t)(Rs2) << 9))
-
-// opcode + destination register + immediate val
-#define Pyrix64EncodeI(Op, Rd, Imm)       \
-    (((uint32_t)(Op) << 24) |             \
-    ((uint32_t)(Rd)  << 19) |             \
-    ((uint32_t)(Imm) & 0x7FFFFu))
-
-#endif /*Pyrix64EncH */
+#endif /*Pyrix64PysmuEncH */

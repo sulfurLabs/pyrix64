@@ -4,8 +4,11 @@
  * Copyright (C) 2026 sulfurLabs
  *
  * PROJECT: pyrix64
- * FILE: alu.v
- * DESC.: ALU
+ * FILE: isa.h
+ * DESC.: instruction set architecture
+ *
+ * CREATED BY: emex
+ * UPDATED BY: offihito
  *
  * This file is part of pyrix64.
  *
@@ -40,11 +43,17 @@ typedef enum
     Pyrix64opXor   = 0x15, // bits which are different
     Pyrix64opNot   = 0x16, // flips
     Pyrix64opMovI  = 0x20, // number into register
-    Pyrix64opLoad  = 0x30, // from memory
-    Pyrix64opStore = 0x31, // into memory
+    Pyrix64opLoad   = 0x30, // from memory
+    Pyrix64opStore  = 0x31, // into memory
+    Pyrix64opLoadB  = 0x32, // load byte from memory
+    Pyrix64opStoreB = 0x33, // store byte to memory
     Pyrix64opJmp   = 0x40, // jump
     Pyrix64opBeq   = 0x41, // jump if the values match
-    Pyrix64opBne   = 0x42  // jump if the values dont match
+    Pyrix64opBne   = 0x42, // jump if the values dont match
+    Pyrix64opCall  = 0x43, // call function
+    Pyrix64opRet   = 0x44, // return from function
+    Pyrix64opPush  = 0x50, // push to stack
+    Pyrix64opPop   = 0x51  // pop from stack
 
 } Pyrix64Opcode;
 

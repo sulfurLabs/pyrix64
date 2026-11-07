@@ -7,6 +7,9 @@
  * FILE: cfg.h
  * DESC.: pyrix64 emulator config
  *
+ * CREATED BY: emex
+ * UPDATED BY: emex
+ *
  * This file is part of pyrix64.
  *
  * pyrix64 is free software: you can redistribute it and/or modify
@@ -34,7 +37,7 @@
 #define Pyrix64RegisterZero 0
 #define Pyrix64RegisterRa 31
 
-#define Pyrix64RamSize 4096
+#define Pyrix64RamSize 65536
 #define Pyrix64RamAccessSize 8
 
 #endif /*p64cfgh */

@@ -7,6 +7,9 @@
  * FILE: instr.c
  * DESC.: instructions impl
  *
+ * CREATED BY: emex
+ * UPDATED BY: offihito
+ *
  * This file is part of pyrix64.
  *
  * pyrix64 is free software: you can redistribute it and/or modify
@@ -29,6 +32,7 @@
 #include <stddef.h>
 
 #include "cpu.h"
+#include "display.h"
 #include "instr.h"
 #include "pyrix/isa.h"
 
@@ -218,8 +222,17 @@ static bool Pyrix64InstrLoad(
     uint32_t Instruction
 ){
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
-    uint16_t Address = Pyrix64DecodeAddress(Instruction);
+    uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
+    uint64_t Address = Pyrix64RegRead(Cpu, Rs1) + Pyrix64DecodeAddress(Instruction);
     uint64_t Value = 0;
+
+    if (Address == Pyrix64VideoStreamAddress)
+    {
+        Value = (uint64_t)Pyrix64VideoReadPixelRGB();
+        Pyrix64RegWrite(Cpu, Rd, Value);
+
+        return true;
+    }
 
     if (!Pyrix64RamLoad(Ram, Address, &Value))
     {
@@ -237,12 +250,294 @@ static bool Pyrix64InstrStore(
     uint32_t Instruction
 ){
     uint8_t Source = Pyrix64DecodeRd(Instruction);
-    uint16_t Address = Pyrix64DecodeAddress(Instruction);
+    uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
+    uint64_t Address = Pyrix64RegRead(Cpu, Rs1) + Pyrix64DecodeAddress(Instruction);
+    uint64_t Value = Pyrix64RegRead(Cpu, Source);
 
-    if (!Pyrix64RamStore(Ram, Address, Pyrix64RegRead(Cpu, Source)))
+    if (Address == Pyrix64ScreenAddress)
+    {
+        Pyrix64DisplayPutChar((char)Value);
+        Pyrix64DisplayFlush();
+
+        return true;
+    }
+    else if (Address == Pyrix64ScreenColorAddress)
+    {
+        Pyrix64DisplaySetColor((uint8_t)(Value & 0x0F), (uint8_t)((Value >> 4) & 0x0F));
+
+        return true;
+    }
+    else if (Address == Pyrix64PixelXAddress)
+    {
+        Pyrix64DisplaySetPixelX((uint32_t)Value);
+
+        return true;
+    }
+    else if (Address == Pyrix64PixelYAddress)
+    {
+        Pyrix64DisplaySetPixelY((uint32_t)Value);
+
+        return true;
+    }
+    else if (Address == Pyrix64PixelColorAddress)
+    {
+        Pyrix64DisplayPlotColorRGB((uint32_t)Value);
+
+        return true;
+    }
+    else if (Address == Pyrix64FrameSyncAddress)
+    {
+        Pyrix64DisplayFrameSync((uint32_t)Value);
+
+        if (!Pyrix64DisplayPoll())
+        {
+            Cpu->Halted = true;
+        }
+
+        return true;
+    }
+    else if (Address == Pyrix64PixelScaleAddress)
+    {
+        Pyrix64DisplaySetPixelScale((uint32_t)Value);
+
+        return true;
+    }
+    else if (Address == Pyrix64VideoStreamAddress)
+    {
+        Pyrix64VideoRewind();
+
+        return true;
+    }
+
+    if (!Pyrix64RamStore(Ram, Address, Value))
     {
         return false;
     }
+
+    return true;
+}
+
+static bool Pyrix64InstrLoadB(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    uint8_t Rd = Pyrix64DecodeRd(Instruction);
+    uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
+    uint64_t Address = Pyrix64RegRead(Cpu, Rs1) + Pyrix64DecodeAddress(Instruction);
+    uint8_t ByteVal = 0;
+
+    if (Address == Pyrix64VideoStreamAddress)
+    {
+        ByteVal = Pyrix64VideoReadPixelVGA();
+        Pyrix64RegWrite(Cpu, Rd, (uint64_t)ByteVal);
+
+        return true;
+    }
+
+    if (!Pyrix64RamLoadByte(Ram, Address, &ByteVal))
+    {
+        return false;
+    }
+
+    Pyrix64RegWrite(Cpu, Rd, (uint64_t)ByteVal);
+
+    return true;
+}
+
+static bool Pyrix64InstrStoreB(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    uint8_t Source = Pyrix64DecodeRd(Instruction);
+    uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
+    uint64_t Address = Pyrix64RegRead(Cpu, Rs1) + Pyrix64DecodeAddress(Instruction);
+    uint8_t Value = (uint8_t)Pyrix64RegRead(Cpu, Source);
+
+    if (Address == Pyrix64ScreenAddress)
+    {
+        Pyrix64DisplayPutChar((char)Value);
+        Pyrix64DisplayFlush();
+
+        return true;
+    }
+    else if (Address == Pyrix64ScreenColorAddress)
+    {
+        Pyrix64DisplaySetColor((uint8_t)(Value & 0x0F), (uint8_t)((Value >> 4) & 0x0F));
+
+        return true;
+    }
+    else if (Address == Pyrix64PixelXAddress)
+    {
+        Pyrix64DisplaySetPixelX((uint32_t)Value);
+
+        return true;
+    }
+    else if (Address == Pyrix64PixelYAddress)
+    {
+        Pyrix64DisplaySetPixelY((uint32_t)Value);
+
+        return true;
+    }
+    else if (Address == Pyrix64PixelColorAddress)
+    {
+        Pyrix64DisplayPlotColorVGA(Value);
+
+        return true;
+    }
+    else if (Address == Pyrix64FrameSyncAddress)
+    {
+        Pyrix64DisplayFrameSync((uint32_t)Value);
+
+        if (!Pyrix64DisplayPoll())
+        {
+            Cpu->Halted = true;
+        }
+
+        return true;
+    }
+    else if (Address == Pyrix64PixelScaleAddress)
+    {
+        Pyrix64DisplaySetPixelScale((uint32_t)Value);
+
+        return true;
+    }
+    else if (Address == Pyrix64VideoStreamAddress)
+    {
+        Pyrix64VideoRewind();
+
+        return true;
+    }
+
+    if (!Pyrix64RamStoreByte(Ram, Address, Value))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+static bool Pyrix64InstrJmp(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    (void)Ram;
+
+    Cpu->Pc = Pyrix64DecodeAddress(Instruction);
+
+    return true;
+}
+
+static bool Pyrix64InstrBeq(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    (void)Ram;
+
+    uint8_t Rs1 = Pyrix64DecodeRd(Instruction);
+    uint8_t Rs2 = Pyrix64DecodeRs1(Instruction);
+
+    if (Pyrix64RegRead(Cpu, Rs1) == Pyrix64RegRead(Cpu, Rs2))
+    {
+        Cpu->Pc = Pyrix64DecodeAddress(Instruction);
+    }
+
+    return true;
+}
+
+static bool Pyrix64InstrBne(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    (void)Ram;
+
+    uint8_t Rs1 = Pyrix64DecodeRd(Instruction);
+    uint8_t Rs2 = Pyrix64DecodeRs1(Instruction);
+
+    if (Pyrix64RegRead(Cpu, Rs1) != Pyrix64RegRead(Cpu, Rs2))
+    {
+        Cpu->Pc = Pyrix64DecodeAddress(Instruction);
+    }
+
+    return true;
+}
+
+static bool Pyrix64InstrCall(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    (void)Ram;
+
+    Pyrix64RegWrite(Cpu, Pyrix64RegisterRa, Cpu->Pc);
+    Cpu->Pc = Pyrix64DecodeAddress(Instruction);
+
+    return true;
+}
+
+static bool Pyrix64InstrRet(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    (void)Ram;
+    (void)Instruction;
+
+    Cpu->Pc = Pyrix64RegRead(Cpu, Pyrix64RegisterRa);
+
+    return true;
+}
+
+static bool Pyrix64InstrPush(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    if (Cpu->Sp < Pyrix64RamAccessSize)
+    {
+        printf(":: error: stack overflow\n");
+
+        return false;
+    }
+
+    uint8_t Source = Pyrix64DecodeRd(Instruction);
+
+    Cpu->Sp -= Pyrix64RamAccessSize;
+
+    if (!Pyrix64RamStore(Ram, Cpu->Sp, Pyrix64RegRead(Cpu, Source)))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+static bool Pyrix64InstrPop(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    if (Cpu->Sp + Pyrix64RamAccessSize > Pyrix64RamSize)
+    {
+        printf(":: error: stack underflow\n");
+
+        return false;
+    }
+
+    uint8_t Rd = Pyrix64DecodeRd(Instruction);
+    uint64_t Value = 0;
+
+    if (!Pyrix64RamLoad(Ram, Cpu->Sp, &Value))
+    {
+        return false;
+    }
+
+    Cpu->Sp += Pyrix64RamAccessSize;
+    Pyrix64RegWrite(Cpu, Rd, Value);
 
     return true;
 }
@@ -261,8 +556,17 @@ static const Pyrix64OpFn Pyrix64DispatchTable[0x100] =
     [Pyrix64opXor]   = Pyrix64InstrXor,
     [Pyrix64opNot]   = Pyrix64InstrNot,
     [Pyrix64opMovI]  = Pyrix64InstrMovI,
-    [Pyrix64opLoad]  = Pyrix64InstrLoad,
-    [Pyrix64opStore] = Pyrix64InstrStore
+    [Pyrix64opLoad]   = Pyrix64InstrLoad,
+    [Pyrix64opStore]  = Pyrix64InstrStore,
+    [Pyrix64opLoadB]  = Pyrix64InstrLoadB,
+    [Pyrix64opStoreB] = Pyrix64InstrStoreB,
+    [Pyrix64opJmp]   = Pyrix64InstrJmp,
+    [Pyrix64opBeq]   = Pyrix64InstrBeq,
+    [Pyrix64opBne]   = Pyrix64InstrBne,
+    [Pyrix64opCall]  = Pyrix64InstrCall,
+    [Pyrix64opRet]   = Pyrix64InstrRet,
+    [Pyrix64opPush]  = Pyrix64InstrPush,
+    [Pyrix64opPop]   = Pyrix64InstrPop
 
 };
 

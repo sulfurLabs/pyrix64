@@ -7,6 +7,9 @@
 # FILE: Makefile
 # DESC.: Makefile
 #
+# CREATED BY: emex
+# UPDATED BY: offihito
+#
 # This file is part of pyrix64.
 #
 # pyrix64 is free software: you can redistribute it and/or modify
@@ -26,7 +29,8 @@
 include ../../common.mk
 
 TARGET := $(BUILD_DIR)/pysmu/pysmu
-SOURCES := main.c cpu.c instr.c ram.c
+SOURCES := main.c cpu.c instr.c ram.c display.c vga.c video.c xdg-shell-client-protocol.c xdg-decoration-unstable-v1-client-protocol.c
+LDLIBS := -lwayland-client -lX11
 
 .PHONY: all clean
 
@@ -34,7 +38,7 @@ all: $(TARGET)
 
 $(TARGET): $(SOURCES)
 	mkdir -p $(@D)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(SOURCES) -o $(TARGET)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(SOURCES) $(LDLIBS) -o $(TARGET)
 
 clean:
 	rm -f $(TARGET)

@@ -7,6 +7,9 @@
  * FILE: cpu.c
  * DESC.: central processing unit (cpu)
  *
+ * CREATED BY: emex
+ * UPDATED BY: offihito
+ *
  * This file is part of pyrix64.
  *
  * pyrix64 is free software: you can redistribute it and/or modify
@@ -33,6 +36,7 @@
 void Pyrix64CpuInit(Pyrix64Cpu *Cpu)
 {
     memset(Cpu, 0, sizeof(Pyrix64Cpu));
+    Cpu->Sp = Pyrix64RamSize;
 }
 
 //reads a register

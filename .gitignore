@@ -2,3 +2,5 @@ build/
 *.vcd
 *.fst
 .DS_Store
+*.mp4
+*.bin

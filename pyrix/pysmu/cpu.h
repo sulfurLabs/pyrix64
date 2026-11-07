@@ -7,6 +7,9 @@
  * FILE: cpu.h
  * DESC.: CPU state
  *
+ * CREATED BY: emex
+ * UPDATED BY: emex
+ *
  * This file is part of pyrix64.
  *
  * pyrix64 is free software: you can redistribute it and/or modify

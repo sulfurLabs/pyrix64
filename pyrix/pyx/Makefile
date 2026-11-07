@@ -3,9 +3,12 @@
 #
 # Copyright (C) 2026 sulfurLabs
 #
-# PROJECT: pyrix64
+# PROJECT: pyrix64 - pyx
 # FILE: Makefile
 # DESC.: Makefile
+#
+# CREATED BY: emex
+# UPDATED BY: offihito
 #
 # This file is part of pyrix64.
 #
@@ -26,7 +29,7 @@
 include ../../common.mk
 
 TARGET := $(BUILD_DIR)/pyx/pyx
-SOURCES := main.c
+SOURCES := main.c asm.c
 
 .PHONY: all clean
 
