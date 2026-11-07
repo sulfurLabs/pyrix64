@@ -24,9 +24,16 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "cpu.h"
 #include "instr.h"
+
+//resets cpu state
+void Pyrix64CpuInit(Pyrix64Cpu *Cpu)
+{
+    memset(Cpu, 0, sizeof(Pyrix64Cpu));
+}
 
 //reads a register
 // r0 is always zero, like riscv
@@ -67,6 +74,20 @@ void Pyrix64RegWrite(
     }
 
     Cpu->Registers[RegIndex] = Value;
+}
+
+//status register
+
+uint64_t Pyrix64StatusRead(
+    const Pyrix64Cpu *Cpu
+){
+    return Cpu->Status;
+}
+void Pyrix64StatusWrite(
+    Pyrix64Cpu *Cpu,
+    uint64_t Value
+){
+    Cpu->Status = Value;
 }
 
 //instruction fetch

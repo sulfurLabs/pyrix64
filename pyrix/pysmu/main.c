@@ -34,9 +34,10 @@
 
 int main(void)
 {
-    Pyrix64Cpu Cpu = {0};
+    Pyrix64Cpu Cpu;
     Pyrix64Ram Ram;
 
+    Pyrix64CpuInit(&Cpu);
     Pyrix64RamInit(&Ram);
 
     /* custom program till we have a compiler */

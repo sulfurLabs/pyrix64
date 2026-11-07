@@ -38,9 +38,12 @@ typedef struct
     uint64_t Sp; // stack pointer
     uint64_t Fp; // frame pointer
     uint64_t Pc; // pc == program counter, not personal computer
+    uint64_t Status; // status register, bit layout to be defined later
     bool Halted; // true if it really stopped
 
 } Pyrix64Cpu;
+
+void Pyrix64CpuInit(Pyrix64Cpu *Cpu);
 
 uint64_t Pyrix64RegRead(
     const Pyrix64Cpu *Cpu,
@@ -50,6 +53,14 @@ uint64_t Pyrix64RegRead(
 void Pyrix64RegWrite(
     Pyrix64Cpu *Cpu,
     uint8_t RegIndex,
+    uint64_t Value
+);
+
+uint64_t Pyrix64StatusRead(
+    const Pyrix64Cpu *Cpu
+);
+void Pyrix64StatusWrite(
+    Pyrix64Cpu *Cpu,
     uint64_t Value
 );
 

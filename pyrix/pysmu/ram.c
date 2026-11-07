@@ -23,6 +23,7 @@
  * https://www.gnu.org/licenses/gpl-3.0.html
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -33,18 +34,77 @@ void Pyrix64RamInit(Pyrix64Ram *Ram)
     memset(Ram->Bytes, 0, sizeof(Ram->Bytes));
 }
 
-// little endian
-bool Pyrix64RamLoad(Pyrix64Ram *Ram, uint16_t Address, uint64_t *Value)
-{
-    uint64_t Result = 0;
-
-    if (Address + Pyrix64RamAccessSize > Pyrix64RamSize)
+//AccessSize from Adress needs to be checked that it stays in ram
+// shouldnt overflow
+static bool Pyrix64RamRangeOk(
+    uint64_t Address,
+    uint64_t AccessSize
+){
+    if (Address >= Pyrix64RamSize)
     {
-        printf(":: error: RAM load out of bounds (0x%04X)\n", Address);
+        return false;
+    }
+    if (AccessSize > (uint64_t)Pyrix64RamSize - Address)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+//reads one byte
+// false if out of bounds
+bool Pyrix64RamLoadByte(
+    Pyrix64Ram *Ram,
+    uint64_t Address,
+    uint8_t *Value
+){
+    if (!Pyrix64RamRangeOk(Address, 1))
+    {
+        printf(":: error: RAM load out of bounds (0x%" PRIX64 ")\n", Address);
 
         return false;
     }
-    for (uint32_t i = 0; i < Pyrix64RamAccessSize; i++)
+
+    *Value = Ram->Bytes[Address];
+
+    return true;
+}
+//writes one byte
+// false if out of bounds
+bool Pyrix64RamStoreByte(
+    Pyrix64Ram *Ram,
+    uint64_t Address,
+    uint8_t Value
+){
+    if (!Pyrix64RamRangeOk(Address, 1))
+    {
+        printf(":: error: RAM store out of bounds (0x%" PRIX64 ")\n", Address);
+
+        return false;
+    }
+
+    Ram->Bytes[Address] = Value;
+
+    return true;
+}
+
+//little endian
+bool Pyrix64RamLoad(
+    Pyrix64Ram *Ram,
+    uint64_t Address,
+    uint64_t *Value
+){
+    uint64_t Result = 0;
+
+    if (!Pyrix64RamRangeOk(Address, Pyrix64RamAccessSize))
+    {
+        printf(":: error: RAM load out of bounds (0x%" PRIX64 ")\n", Address);
+
+        return false;
+    }
+    // range is checked, so this cant run past the end
+    for (uint64_t i = 0; i < Pyrix64RamAccessSize; i++)
     {
         Result |= (uint64_t)Ram->Bytes[Address + i] << (8 * i);
     }
@@ -54,15 +114,19 @@ bool Pyrix64RamLoad(Pyrix64Ram *Ram, uint16_t Address, uint64_t *Value)
     return true;
 }
 
-bool Pyrix64RamStore(Pyrix64Ram *Ram, uint16_t Address, uint64_t Value)
-{
-    if (Address + Pyrix64RamAccessSize > Pyrix64RamSize)
+//less significant byte first
+bool Pyrix64RamStore(
+    Pyrix64Ram *Ram,
+    uint64_t Address,
+    uint64_t Value
+){
+    if (!Pyrix64RamRangeOk(Address, Pyrix64RamAccessSize))
     {
-        printf(":: error: RAM store out of bounds (0x%04X)\n", Address);
+        printf(":: error: RAM store out of bounds (0x%" PRIX64 ")\n", Address);
 
         return false;
     }
-    for (uint32_t i = 0; i < Pyrix64RamAccessSize; i++)
+    for (uint64_t i = 0; i < Pyrix64RamAccessSize; i++)
     {
         Ram->Bytes[Address + i] = (uint8_t)((Value >> (8 * i)) & 0xFFu);
     }
