@@ -39,6 +39,12 @@ typedef struct
     size_t Capacity;
 } PyxImage;
 
+typedef struct
+{
+    const char *Name;
+    uint32_t Opcode;
+} PyxInstruction;
+
 //format/bin.c
 void PyxImageInit(PyxImage *Image);
 bool PyxImageAppendWord(PyxImage *Image, uint32_t Word);

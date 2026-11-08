@@ -46,6 +46,33 @@ static bool PyxStrCaseEq(
 
     return *Left == '\0' && *Right == '\0';
 }
+
+//instructions are always uppercase in pyx
+static const PyxInstruction PyxInstructionTable[] = {
+    { "ADD", Pyrix64opAdd },
+    { "SUB", Pyrix64opSub }
+};
+
+static const PyxInstruction *PyxLookupInstruction(
+    const char *Name
+){
+    size_t Index;
+
+    //searches by name
+    for (
+        Index = 0;
+        Index < sizeof(PyxInstructionTable) / sizeof(PyxInstructionTable[0]);
+        Index++
+    ){
+        if (PyxStrCaseEq(Name, PyxInstructionTable[Index].Name))
+        {
+            return &PyxInstructionTable[Index];
+        }
+    }
+
+    // unknown name
+    return NULL;
+}
 static int PyxParseRegister(const char *Token)
 {
     char *End;
@@ -136,36 +163,24 @@ static uint32_t PyxEncode(uint32_t Opcode, int Rd, int Rs1, int Rs2)
     );
 }
 
-static bool PyxParseLine(const char *File, char *Line, int Number, PyxImage *Image)
-{
-    const char *Cursor = Line;
+static bool PyxParseInstruction(
+    const char *File,
+    int LineNumber,
+    const PyxInstruction *Instruction,
+    const char *Operands,
+    PyxImage *Image
+){
+    const char *Cursor = Operands;
 
-    uint32_t Opcode;
     char Token[PYX_TOKEN_LEN];
     int Registers[PYX_OPERAND_COUNT];
     int Count = 0;
-
-    if (!PyxNextToken(&Cursor, Token))
-    {
-        return true; //empty line
-    }
-
-    //dw it will get better
-    if (PyxStrCaseEq(Token, "ADD") || PyxStrCaseEq(Token, "SUB"))
-    {
-        Opcode = (Token[0] == 'a' || Token[0] == 'A') ? Pyrix64opAdd : Pyrix64opSub;
-    }
-    else
-    {
-        PyxError(File, Number, "Unknown instruction", Token);
-        return false;
-    }
 
     while (PyxNextToken(&Cursor, Token))
     {
         if (Count >= PYX_OPERAND_COUNT)
         {
-            PyxError(File, Number, "Expected exactly three register operands", NULL);
+            PyxError(File, LineNumber, "Expected exactly three register operands", NULL);
             return false;
         }
 
@@ -173,20 +188,20 @@ static bool PyxParseLine(const char *File, char *Line, int Number, PyxImage *Ima
 
         if (Registers[Count - 1] < 0)
         {
-            PyxError(File, Number, "Invalid register", Token);
+            PyxError(File, LineNumber, "Invalid register", Token);
             return false;
         }
     }
 
     if (Count != PYX_OPERAND_COUNT)
     {
-        PyxError(File, Number, "Expected exactly three register operands", NULL);
+        PyxError(File, LineNumber, "Expected exactly three register operands", NULL);
         return false;
     }
     if (!PyxImageAppendWord(
             Image,
             PyxEncode(
-                Opcode,
+                Instruction->Opcode,
                 Registers[0],
                 Registers[1],
                 Registers[2]
@@ -196,13 +211,37 @@ static bool PyxParseLine(const char *File, char *Line, int Number, PyxImage *Ima
 
     printf(
         "Parsed %s: rd=r%d, rs1=r%d, rs2=r%d\n",
-        (Opcode == Pyrix64opAdd) ? "ADD" : "SUB",
+        Instruction->Name,
         Registers[0],
         Registers[1],
         Registers[2]
     );
 
     return true;
+}
+
+static bool PyxParseLine(const char *File, char *Line, int Number, PyxImage *Image)
+{
+    const char *Cursor = Line;
+
+    const PyxInstruction *Instruction;
+    char Token[PYX_TOKEN_LEN];
+
+    if (!PyxNextToken(&Cursor, Token))
+    {
+        return true; //empty line
+    }
+
+    // rest of the line is still the instruction
+    Instruction = PyxLookupInstruction(Token);
+
+    if (Instruction == NULL)
+    {
+        PyxError(File, Number, "Unknown instruction", Token);
+        return false;
+    }
+
+    return PyxParseInstruction(File, Number, Instruction, Cursor, Image);
 }
 
 bool PyxParseFile(
