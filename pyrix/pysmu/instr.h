@@ -34,11 +34,13 @@
 //length in bytes
 uint32_t Pyrix64InstructionLength(uint32_t Instruction);
 
+// NextPC has the adress of the instruction after
 bool Pyrix64DecodeExecute(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 );
 
 #endif /*Pyrix64InstrH */

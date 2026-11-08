@@ -45,6 +45,8 @@ typedef enum
     Pyrix64opJmp     = 0x40, // jump
     Pyrix64opBeq     = 0x41, // jump if the values match
     Pyrix64opBne     = 0x42, // jump if the values dont match
+    Pyrix64opCall    = 0x43, // call a function
+    Pyrix64opRet     = 0x44, // return from a function
     Pyrix64opPush    = 0x50, // push a register
     Pyrix64opPop     = 0x51, // pop a register
     Pyrix64opPushFp  = 0x52, // push the frame pointer

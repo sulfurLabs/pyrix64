@@ -44,7 +44,7 @@ uint64_t Pyrix64RegRead(
 ){
     if (RegIndex >= Pyrix64RegisterCount)
     {
-        printf(":: error: register read out of range (r%u)\n", RegIndex);
+        printf("::  error: register read out of range (r%u)\n", RegIndex);
 
         return 0;
     }
@@ -65,7 +65,7 @@ void Pyrix64RegWrite(
 ) {
     if (RegIndex >= Pyrix64RegisterCount)
     {
-        printf(":: error: register write out of range (r%u)\n", RegIndex);
+        printf("::  error: register write out of range (r%u)\n", RegIndex);
 
         return;
     }
@@ -141,7 +141,7 @@ bool Pyrix64StackPointerRead(
 ){
     if (SpIndex >= Pyrix64StackPointerCount)
     {
-        printf(":: error: stack pointer read out of range (sp%u)\n", SpIndex);
+        printf("::  error: stack pointer read out of range (sp%u)\n", SpIndex);
 
         return false;
     }
@@ -159,7 +159,7 @@ bool Pyrix64StackPointerWrite(
 ){
     if (SpIndex >= Pyrix64StackPointerCount)
     {
-        printf(":: error: stack pointer write out of range (sp%u)\n", SpIndex);
+        printf("::  error: stack pointer write out of range (sp%u)\n", SpIndex);
 
         return false;
     }
@@ -178,7 +178,7 @@ uint8_t Pyrix64ActiveStackPointerIndex(
     {
         //shouldnt ever happen
         // its validated when writing
-        printf(":: error: no stack pointer for this privilege level\n");
+        printf("::  error: no stack pointer for this privilege level\n");
 
         return 0;
     }
@@ -217,7 +217,7 @@ bool Pyrix64PrivilegeLevelWrite(
 ){
     if ((uint8_t)PL >= Pyrix64PrivilegeLevelCount)
     {
-        printf(":: error: invalid privilege level (%u)\n", (uint8_t)PL);
+        printf("::  error: invalid privilege level (%u)\n", (uint8_t)PL);
 
         return false;
     }
@@ -254,7 +254,7 @@ bool Pyrix64FetchInstruction(
     // pc + 4 cant overflow
     if (!Pyrix64RamLoad32(Ram, Pc + Pyrix64InstrLen32, ExtWord))
     {
-        printf(":: error: incomplete instruction; no second word (pc 0x%" PRIX64 ")\n", Pc);
+        printf("::  error: incomplete instruction; no second word (pc 0x%" PRIX64 ")\n", Pc);
 
         return false;
     }
@@ -273,7 +273,7 @@ bool Pyrix64Execute(
         // program counter
         if (Cpu->Pc >= Pyrix64RamSize)
         {
-            printf("program counter out of range \n");
+            printf("::  error: program counter out of range \n");
 
             return false;
         }
@@ -281,21 +281,22 @@ bool Pyrix64Execute(
         uint32_t Word0 = 0;
         uint32_t ExtWord = 0;
         uint32_t Length = 0;
+        uint64_t NextPc = 0;
 
         if (!Pyrix64FetchInstruction(Ram, Cpu->Pc, &Word0, &ExtWord, &Length))
         {
-            printf(":: error: instruction fetch failed at pc 0x%" PRIX64 " \n", Cpu->Pc);
+            printf("::  error: instruction fetch failed at pc 0x%" PRIX64 " \n", Cpu->Pc);
 
             return false;
         }
 
-        if (!Pyrix64DecodeExecute(Cpu, Ram, Word0, ExtWord))
+        if (!Pyrix64DecodeExecute(Cpu, Ram, Word0, ExtWord, &NextPc))
         {
             return false;
         }
 
         // pc moves only after the instruction ran ok
-        Cpu->Pc += Length;
+        Cpu->Pc = NextPc;
     }
 
     return true;

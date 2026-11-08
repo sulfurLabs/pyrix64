@@ -67,7 +67,8 @@ typedef bool (*Pyrix64OpFn)(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 );
 
 // 19 bit signed immediate as used by movI
@@ -88,8 +89,10 @@ static bool Pyrix64InstrNop(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Cpu;
     (void)Ram;
     (void)Instruction;
@@ -102,8 +105,10 @@ static bool Pyrix64InstrHalt(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Ram;
     (void)Instruction;
     (void)ExtWord;
@@ -117,8 +122,10 @@ static bool Pyrix64InstrMov(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Ram;
     (void)ExtWord;
 
@@ -134,8 +141,10 @@ static bool Pyrix64InstrAdd(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Ram;
     (void)ExtWord;
 
@@ -152,8 +161,10 @@ static bool Pyrix64InstrSub(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Ram;
     (void)ExtWord;
 
@@ -170,8 +181,10 @@ static bool Pyrix64InstrAnd(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Ram;
     (void)ExtWord;
 
@@ -188,8 +201,10 @@ static bool Pyrix64InstrOr(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Ram;
     (void)ExtWord;
 
@@ -206,8 +221,10 @@ static bool Pyrix64InstrXor(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Ram;
     (void)ExtWord;
 
@@ -224,8 +241,10 @@ static bool Pyrix64InstrNot(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Ram;
     (void)ExtWord;
 
@@ -241,8 +260,10 @@ static bool Pyrix64InstrMovI(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Ram;
     (void)ExtWord;
 
@@ -257,8 +278,10 @@ static bool Pyrix64InstrLoad(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)ExtWord;
 
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
@@ -279,8 +302,10 @@ static bool Pyrix64InstrStore(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)ExtWord;
 
     uint8_t Source = Pyrix64DecodeRd(Instruction);
@@ -307,7 +332,7 @@ static bool Pyrix64StackPush(
 
     if (StackAddress & (Pyrix64StackAlignment - 1))
     {
-        printf(":: error: PUSH unaligned stack address (0x%016" PRIX64 ")\n", StackAddress);
+        printf("::  error: PUSH unaligned stack address (0x%016" PRIX64 ")\n", StackAddress);
 
         return false;
     }
@@ -334,7 +359,7 @@ static bool Pyrix64StackPop(
 
     if (StackAddress & (Pyrix64StackAlignment - 1))
     {
-        printf(":: error: POP unaligned stack address (0x%016" PRIX64 ")\n", StackAddress);
+        printf("::  error: POP unaligned stack address (0x%016" PRIX64 ")\n", StackAddress);
 
         return false;
     }
@@ -354,8 +379,10 @@ static bool Pyrix64InstrPush(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)ExtWord;
 
     const uint8_t Source = Pyrix64DecodeRd(Instruction);
@@ -369,8 +396,10 @@ static bool Pyrix64InstrPop(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)ExtWord;
 
     const uint8_t Dest = Pyrix64DecodeRd(Instruction);
@@ -391,8 +420,10 @@ static bool Pyrix64InstrPushFp(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Instruction;
     (void)ExtWord;
 
@@ -405,8 +436,10 @@ static bool Pyrix64InstrPopFp(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Instruction;
     (void)ExtWord;
 
@@ -443,8 +476,10 @@ static bool Pyrix64InstrPushM(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Instruction;
 
     const uint32_t Mask = ExtWord & ~1u;
@@ -459,13 +494,13 @@ static bool Pyrix64InstrPushM(
 
     if (SpStart & (Pyrix64StackAlignment - 1))
     {
-        printf(":: error: PUSHM unaligned stack address (0x%016" PRIX64 ")\n", SpStart);
+        printf("::  error: PUSHM unaligned stack address (0x%016" PRIX64 ")\n", SpStart);
 
         return false;
     }
     if (!Pyrix64RamRangeOk(SpStart - Size, Size))
     {
-        printf(":: error: PUSHM stack range out of bounds (0x%016" PRIX64 ")\n", SpStart - Size);
+        printf("::  error: PUSHM stack range out of bounds (0x%016" PRIX64 ")\n", SpStart - Size);
 
         return false;
     }
@@ -496,8 +531,10 @@ static bool Pyrix64InstrPopM(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
+    (void)NextPc;
     (void)Instruction;
 
     const uint32_t Mask = ExtWord & ~1u;
@@ -512,13 +549,13 @@ static bool Pyrix64InstrPopM(
 
     if (SpStart & (Pyrix64StackAlignment - 1))
     {
-        printf(":: error: POPM unaligned stack address (0x%016" PRIX64 ")\n", SpStart);
+        printf("::  error: POPM unaligned stack address (0x%016" PRIX64 ")\n", SpStart);
 
         return false;
     }
     if (!Pyrix64RamRangeOk(SpStart, Size))
     {
-        printf(":: error: POPM stack range out of bounds (0x%016" PRIX64 ")\n", SpStart);
+        printf("::  error: POPM stack range out of bounds (0x%016" PRIX64 ")\n", SpStart);
 
         return false;
     }
@@ -556,6 +593,64 @@ static bool Pyrix64InstrPopM(
     return true;
 }
 
+//saves backjump adress to r31,
+// then jumps
+static bool Pyrix64InstrCall(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction,
+    uint32_t ExtWord,
+    uint64_t *NextPc
+){
+    (void)Ram;
+    (void)ExtWord;
+
+    const uint64_t Target = Pyrix64DecodeAddress(Instruction);
+
+    // if the call works r31 is written
+    if (Target >= Pyrix64RamSize)
+    {
+        printf("::  error: CALL target out of range (0x%" PRIX64 ")\n", Target);
+
+        return false;
+    }
+
+    Pyrix64RegWrite(Cpu, Pyrix64RegisterRa, Cpu->Pc + Pyrix64InstructionLength(Instruction));
+
+    *NextPc = Target;
+
+    return true;
+}
+
+//looks into r31 for return adress
+// jumps to that adress while r31 is unchanged
+//
+// also epc is just for exceptions, so its not used
+static bool Pyrix64InstrRet(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction,
+    uint32_t ExtWord,
+    uint64_t *NextPc
+){
+    (void)Ram;
+    (void)Instruction;
+    (void)ExtWord;
+
+    const uint64_t Target = Pyrix64RegRead(Cpu, Pyrix64RegisterRa);
+
+    if (Target >= Pyrix64RamSize)
+    {
+        printf("::  error: RET target out of range (0x%016" PRIX64 ")\n", Target);
+
+        return false;
+    }
+
+    *NextPc = Target;
+
+    return true;
+}
+
 //dispatch table
 // opcode to instruction
 static const Pyrix64OpFn Pyrix64DispatchTable[0x100] =
@@ -577,7 +672,9 @@ static const Pyrix64OpFn Pyrix64DispatchTable[0x100] =
     [Pyrix64opPushFp]  = Pyrix64InstrPushFp,
     [Pyrix64opPopFp]   = Pyrix64InstrPopFp,
     [Pyrix64opPushM]   = Pyrix64InstrPushM,
-    [Pyrix64opPopM]    = Pyrix64InstrPopM
+    [Pyrix64opPopM]    = Pyrix64InstrPopM,
+    [Pyrix64opCall]    = Pyrix64InstrCall,
+    [Pyrix64opRet]     = Pyrix64InstrRet
 
 };
 
@@ -585,7 +682,8 @@ bool Pyrix64DecodeExecute(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
-    uint32_t ExtWord
+    uint32_t ExtWord,
+    uint64_t *NextPc
 ){
     uint8_t Opcode = Pyrix64DecodeOpcode(Instruction);
 
@@ -593,10 +691,11 @@ bool Pyrix64DecodeExecute(
 
     if (Handler == NULL)
     {
-        printf(":: error: unknown opcode 0x%02X\n", Opcode);
+        printf("::  error: unknown opcode 0x%02X\n", Opcode);
 
         return false;
     }
+    *NextPc = Cpu->Pc + Pyrix64InstructionLength(Instruction);
 
-    return Handler(Cpu, Ram, Instruction, ExtWord);
+    return Handler(Cpu, Ram, Instruction, ExtWord, NextPc);
 }
