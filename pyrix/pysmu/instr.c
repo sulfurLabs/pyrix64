@@ -23,6 +23,7 @@
  * https://www.gnu.org/licenses/gpl-3.0.html
  */
 
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -247,22 +248,144 @@ static bool Pyrix64InstrStore(
     return true;
 }
 
+//push value to active stack
+// stack goes down
+// one entry is 8bytes, aligned!
+// sp update
+static bool Pyrix64StackPush(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint64_t Value
+){
+    const uint64_t StackAddress = Pyrix64ActiveStackPointerRead(Cpu) - Pyrix64StackEntrySize;
+
+    if (StackAddress & (Pyrix64StackAlignment - 1))
+    {
+        printf(":: error: PUSH unaligned stack address (0x%016" PRIX64 ")\n", StackAddress);
+
+        return false;
+    }
+
+    if (!Pyrix64RamStore(Ram, StackAddress, Value))
+    {
+        return false;
+    }
+
+    Pyrix64ActiveStackPointerWrite(Cpu, StackAddress);
+
+    return true;
+}
+
+//pop value from active stack
+// reads at current sp
+// after sucessful load, sp gets update
+static bool Pyrix64StackPop(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint64_t *Value
+){
+    const uint64_t StackAddress = Pyrix64ActiveStackPointerRead(Cpu);
+
+    if (StackAddress & (Pyrix64StackAlignment - 1))
+    {
+        printf(":: error: POP unaligned stack address (0x%016" PRIX64 ")\n", StackAddress);
+
+        return false;
+    }
+
+    if (!Pyrix64RamLoad(Ram, StackAddress, Value))
+    {
+        return false;
+    }
+
+    Pyrix64ActiveStackPointerWrite(Cpu, StackAddress + Pyrix64StackEntrySize);
+
+    return true;
+}
+
+//push r to active stack
+static bool Pyrix64InstrPush(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    const uint8_t Source = Pyrix64DecodeRd(Instruction);
+
+    // push r0 is always 0
+    return Pyrix64StackPush(Cpu, Ram, Pyrix64RegRead(Cpu, Source));
+}
+
+//pop r from active stack
+static bool Pyrix64InstrPop(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    const uint8_t Dest = Pyrix64DecodeRd(Instruction);
+    uint64_t Value = 0;
+
+    if (!Pyrix64StackPop(Cpu, Ram, &Value))
+    {
+        return false;
+    }
+
+    Pyrix64RegWrite(Cpu, Dest, Value);
+
+    return true;
+}
+
+//push fp on active stack
+static bool Pyrix64InstrPushFp(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    (void)Instruction;
+
+    //fp doesnt count as gpr, reads and writes directly
+    return Pyrix64StackPush(Cpu, Ram, Cpu->Fp);
+}
+
+//pop fp from active stack
+static bool Pyrix64InstrPopFp(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction
+){
+    (void)Instruction;
+
+    uint64_t Value = 0;
+
+    if (!Pyrix64StackPop(Cpu, Ram, &Value))
+    {
+        return false;
+    }
+
+    Cpu->Fp = Value;
+
+    return true;
+}
+
 //dispatch table
 // opcode to instruction
 static const Pyrix64OpFn Pyrix64DispatchTable[0x100] =
 {
-    [Pyrix64opNop]   = Pyrix64InstrNop,
-    [Pyrix64opHalt]  = Pyrix64InstrHalt,
-    [Pyrix64opMov]   = Pyrix64InstrMov,
-    [Pyrix64opAdd]   = Pyrix64InstrAdd,
-    [Pyrix64opSub]   = Pyrix64InstrSub,
-    [Pyrix64opAnd]   = Pyrix64InstrAnd,
-    [Pyrix64opOr]    = Pyrix64InstrOr,
-    [Pyrix64opXor]   = Pyrix64InstrXor,
-    [Pyrix64opNot]   = Pyrix64InstrNot,
-    [Pyrix64opMovI]  = Pyrix64InstrMovI,
-    [Pyrix64opLoad]  = Pyrix64InstrLoad,
-    [Pyrix64opStore] = Pyrix64InstrStore
+    [Pyrix64opNop]    = Pyrix64InstrNop,
+    [Pyrix64opHalt]   = Pyrix64InstrHalt,
+    [Pyrix64opMov]    = Pyrix64InstrMov,
+    [Pyrix64opAdd]    = Pyrix64InstrAdd,
+    [Pyrix64opSub]    = Pyrix64InstrSub,
+    [Pyrix64opAnd]    = Pyrix64InstrAnd,
+    [Pyrix64opOr]     = Pyrix64InstrOr,
+    [Pyrix64opXor]    = Pyrix64InstrXor,
+    [Pyrix64opNot]    = Pyrix64InstrNot,
+    [Pyrix64opMovI]   = Pyrix64InstrMovI,
+    [Pyrix64opLoad]   = Pyrix64InstrLoad,
+    [Pyrix64opStore]  = Pyrix64InstrStore,
+    [Pyrix64opPush]   = Pyrix64InstrPush,
+    [Pyrix64opPop]    = Pyrix64InstrPop,
+    [Pyrix64opPushFp] = Pyrix64InstrPushFp,
+    [Pyrix64opPopFp]  = Pyrix64InstrPopFp
 
 };
 

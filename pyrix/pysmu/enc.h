@@ -28,6 +28,8 @@
 
 #include <stdint.h>
 
+#include "pyrix/isa.h"
+
 // opcode + destination register + register + register
 #define Pyrix64EncodeR(Op, Rd, Rs1, Rs2)  \
     (((uint32_t)(Op) << 24) |             \
@@ -40,5 +42,10 @@
     (((uint32_t)(Op) << 24) |             \
     ((uint32_t)(Rd)  << 19) |             \
     ((uint32_t)(Imm) & 0x7FFFFu))
+
+#define Pyrix64EncodePush(R) Pyrix64EncodeI(Pyrix64opPush, (R), 0)
+#define Pyrix64EncodePop(R) Pyrix64EncodeI(Pyrix64opPop, (R), 0)
+#define Pyrix64EncodePushFp() Pyrix64EncodeI(Pyrix64opPushFp, 0, 0)
+#define Pyrix64EncodePopFp() Pyrix64EncodeI(Pyrix64opPopFp, 0, 0)
 
 #endif /*Pyrix64EncH */

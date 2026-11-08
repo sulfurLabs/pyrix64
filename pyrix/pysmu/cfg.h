@@ -48,6 +48,10 @@
 // PL2  Kernel
 // PL3  Secure Monitor
 
+//8 byte entries + 8 aligned
+#define Pyrix64StackEntrySize 8
+#define Pyrix64StackAlignment 8
+
 #define Pyrix64RamSize 4096
 #define Pyrix64RamAccessSize 8
 
