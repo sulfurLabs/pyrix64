@@ -48,4 +48,7 @@
 #define Pyrix64EncodePushFp() Pyrix64EncodeI(Pyrix64opPushFp, 0, 0)
 #define Pyrix64EncodePopFp() Pyrix64EncodeI(Pyrix64opPopFp, 0, 0)
 
+#define Pyrix64EncodePushM() Pyrix64EncodeI(Pyrix64opPushM, 0, 0)
+#define Pyrix64EncodePopM() Pyrix64EncodeI(Pyrix64opPopM, 0, 0)
+
 #endif /*Pyrix64EncH */

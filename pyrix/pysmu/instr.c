@@ -422,16 +422,136 @@ static bool Pyrix64InstrPopFp(
     return true;
 }
 
-static bool Pyrix64InstrReserved64(
+//the number of selected r in pushm/popm
+// r0 is bit 0 and is ignored like always
+static uint32_t Pyrix64DecodeMaskCount(uint32_t Mask)
+{
+    uint32_t Count = 0;
+
+    for (uint32_t r = 1; r < Pyrix64RegisterCount; r++)
+    {
+        if (Mask & (1u << r))
+        {
+            Count++;
+        }
+    }
+
+    return Count;
+}
+
+static bool Pyrix64InstrPushM(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
     uint32_t Instruction,
     uint32_t ExtWord
 ){
-    (void)Cpu;
-    (void)Ram;
     (void)Instruction;
-    (void)ExtWord;
+
+    const uint32_t Mask = ExtWord & ~1u;
+
+    if (Mask == 0)
+    {
+        return true;
+    }
+
+    const uint64_t SpStart = Pyrix64ActiveStackPointerRead(Cpu);
+    const uint64_t Size = (uint64_t)Pyrix64DecodeMaskCount(Mask) * Pyrix64StackEntrySize;
+
+    if (SpStart & (Pyrix64StackAlignment - 1))
+    {
+        printf(":: error: PUSHM unaligned stack address (0x%016" PRIX64 ")\n", SpStart);
+
+        return false;
+    }
+    if (!Pyrix64RamRangeOk(SpStart - Size, Size))
+    {
+        printf(":: error: PUSHM stack range out of bounds (0x%016" PRIX64 ")\n", SpStart - Size);
+
+        return false;
+    }
+
+    // r1, r2, ...
+    uint64_t Address = SpStart;
+
+    for (uint32_t r = 1; r < Pyrix64RegisterCount; r++)
+    {
+        if (Mask & (1u << r))
+        {
+            Address -= Pyrix64StackEntrySize;
+
+            // cant fail
+            if (!Pyrix64RamStore(Ram, Address, Pyrix64RegRead(Cpu, r)))
+            {
+                return false;
+            }
+        }
+    }
+
+    // in the end, sp is written
+    Pyrix64ActiveStackPointerWrite(Cpu, Address);
+
+    return true;
+}
+static bool Pyrix64InstrPopM(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction,
+    uint32_t ExtWord
+){
+    (void)Instruction;
+
+    const uint32_t Mask = ExtWord & ~1u;
+
+    if (Mask == 0)
+    {
+        return true;
+    }
+
+    const uint64_t SpStart = Pyrix64ActiveStackPointerRead(Cpu);
+    const uint64_t Size = (uint64_t)Pyrix64DecodeMaskCount(Mask) * Pyrix64StackEntrySize;
+
+    if (SpStart & (Pyrix64StackAlignment - 1))
+    {
+        printf(":: error: POPM unaligned stack address (0x%016" PRIX64 ")\n", SpStart);
+
+        return false;
+    }
+    if (!Pyrix64RamRangeOk(SpStart, Size))
+    {
+        printf(":: error: POPM stack range out of bounds (0x%016" PRIX64 ")\n", SpStart);
+
+        return false;
+    }
+
+    uint64_t Values[Pyrix64RegisterCount] = { 0 };
+    uint64_t Address = SpStart;
+
+    for (uint32_t r = Pyrix64RegisterCount - 1; r >= 1; r--)
+    {
+        if (Mask & (1u << r))
+        {
+            //this cant fail like pushm
+            // the range is checked before
+            if (!Pyrix64RamLoad(Ram, Address, &Values[r]))
+            {
+                return false;
+            }
+
+            Address += Pyrix64StackEntrySize;
+        }
+    }
+
+    // all reads done
+    for (uint32_t r = Pyrix64RegisterCount - 1; r >= 1; r--)
+    {
+        if (Mask & (1u << r))
+        {
+            // write registers
+            Pyrix64RegWrite(Cpu, r, Values[r]);
+        }
+    }
+
+    Pyrix64ActiveStackPointerWrite(Cpu, Address);
 
     return true;
 }
@@ -440,23 +560,24 @@ static bool Pyrix64InstrReserved64(
 // opcode to instruction
 static const Pyrix64OpFn Pyrix64DispatchTable[0x100] =
 {
-    [Pyrix64opNop]    = Pyrix64InstrNop,
-    [Pyrix64opHalt]   = Pyrix64InstrHalt,
-    [Pyrix64opMov]    = Pyrix64InstrMov,
-    [Pyrix64opAdd]    = Pyrix64InstrAdd,
-    [Pyrix64opSub]    = Pyrix64InstrSub,
-    [Pyrix64opAnd]    = Pyrix64InstrAnd,
-    [Pyrix64opOr]     = Pyrix64InstrOr,
-    [Pyrix64opXor]    = Pyrix64InstrXor,
-    [Pyrix64opNot]    = Pyrix64InstrNot,
-    [Pyrix64opMovI]   = Pyrix64InstrMovI,
-    [Pyrix64opLoad]   = Pyrix64InstrLoad,
-    [Pyrix64opStore]  = Pyrix64InstrStore,
-    [Pyrix64opPush]   = Pyrix64InstrPush,
-    [Pyrix64opPop]    = Pyrix64InstrPop,
-    [Pyrix64opPushFp] = Pyrix64InstrPushFp,
-    [Pyrix64opPopFp]  = Pyrix64InstrPopFp,
-    [Pyrix64opReserved64] = Pyrix64InstrReserved64
+    [Pyrix64opNop]     = Pyrix64InstrNop,
+    [Pyrix64opHalt]    = Pyrix64InstrHalt,
+    [Pyrix64opMov]     = Pyrix64InstrMov,
+    [Pyrix64opAdd]     = Pyrix64InstrAdd,
+    [Pyrix64opSub]     = Pyrix64InstrSub,
+    [Pyrix64opAnd]     = Pyrix64InstrAnd,
+    [Pyrix64opOr]      = Pyrix64InstrOr,
+    [Pyrix64opXor]     = Pyrix64InstrXor,
+    [Pyrix64opNot]     = Pyrix64InstrNot,
+    [Pyrix64opMovI]    = Pyrix64InstrMovI,
+    [Pyrix64opLoad]    = Pyrix64InstrLoad,
+    [Pyrix64opStore]   = Pyrix64InstrStore,
+    [Pyrix64opPush]    = Pyrix64InstrPush,
+    [Pyrix64opPop]     = Pyrix64InstrPop,
+    [Pyrix64opPushFp]  = Pyrix64InstrPushFp,
+    [Pyrix64opPopFp]   = Pyrix64InstrPopFp,
+    [Pyrix64opPushM]   = Pyrix64InstrPushM,
+    [Pyrix64opPopM]    = Pyrix64InstrPopM
 
 };
 

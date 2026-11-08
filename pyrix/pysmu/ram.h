@@ -37,6 +37,7 @@ typedef struct
 } Pyrix64Ram;
 
 void Pyrix64RamInit(Pyrix64Ram *Ram);
+bool Pyrix64RamRangeOk(uint64_t Address, uint64_t AccessSize);
 
 // single byte access
 bool Pyrix64RamLoadByte(Pyrix64Ram *Ram, uint64_t Address, uint8_t *Value);

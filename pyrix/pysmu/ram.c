@@ -36,7 +36,7 @@ void Pyrix64RamInit(Pyrix64Ram *Ram)
 
 //AccessSize from Adress needs to be checked that it stays in ram
 // shouldnt overflow
-static bool Pyrix64RamRangeOk(
+bool Pyrix64RamRangeOk(
     uint64_t Address,
     uint64_t AccessSize
 ){

@@ -30,29 +30,30 @@
 
 typedef enum
 {
-    Pyrix64opNop    = 0x00, // nothing
-    Pyrix64opHalt   = 0x01, // stops
-    Pyrix64opMov    = 0x10, // copy one register to another
-    Pyrix64opAdd    = 0x11, // addition
-    Pyrix64opSub    = 0x12, // subtraction
-    Pyrix64opAnd    = 0x13, // keep 2 bits if they r 1
-    Pyrix64opOr     = 0x14, // bits which r 1 in either
-    Pyrix64opXor    = 0x15, // bits which are different
-    Pyrix64opNot    = 0x16, // flips
-    Pyrix64opMovI   = 0x20, // number into register
-    Pyrix64opLoad   = 0x30, // from memory
-    Pyrix64opStore  = 0x31, // into memory
-    Pyrix64opJmp    = 0x40, // jump
-    Pyrix64opBeq    = 0x41, // jump if the values match
-    Pyrix64opBne    = 0x42, // jump if the values dont match
-    Pyrix64opPush   = 0x50, // push a register
-    Pyrix64opPop    = 0x51, // pop a register
-    Pyrix64opPushFp = 0x52, // push the frame pointer
-    Pyrix64opPopFp  = 0x53, // pop the frame pointer
+    Pyrix64opNop     = 0x00, // nothing
+    Pyrix64opHalt    = 0x01, // stops
+    Pyrix64opMov     = 0x10, // copy one register to another
+    Pyrix64opAdd     = 0x11, // addition
+    Pyrix64opSub     = 0x12, // subtraction
+    Pyrix64opAnd     = 0x13, // keep 2 bits if they r 1
+    Pyrix64opOr      = 0x14, // bits which r 1 in either
+    Pyrix64opXor     = 0x15, // bits which are different
+    Pyrix64opNot     = 0x16, // flips
+    Pyrix64opMovI    = 0x20, // number into register
+    Pyrix64opLoad    = 0x30, // from memory
+    Pyrix64opStore   = 0x31, // into memory
+    Pyrix64opJmp     = 0x40, // jump
+    Pyrix64opBeq     = 0x41, // jump if the values match
+    Pyrix64opBne     = 0x42, // jump if the values dont match
+    Pyrix64opPush    = 0x50, // push a register
+    Pyrix64opPop     = 0x51, // pop a register
+    Pyrix64opPushFp  = 0x52, // push the frame pointer
+    Pyrix64opPopFp   = 0x53, // pop the frame pointer
 
 
-    //placeholder for 64 bit instruction length
-    Pyrix64opReserved64 = 0xE0
+    // 64bit instructions
+    Pyrix64opPushM   = 0xE0, // push multiple gprs
+    Pyrix64opPopM    = 0xE1  // pop multiple gprs
 
 } Pyrix64Opcode;
 
