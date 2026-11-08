@@ -42,9 +42,7 @@ typedef enum
     Pyrix64opMovI    = 0x20, // number into register
     Pyrix64opLoad    = 0x30, // from memory
     Pyrix64opStore   = 0x31, // into memory
-    Pyrix64opJmp     = 0x40, // jump
-    Pyrix64opBeq     = 0x41, // jump if the values match
-    Pyrix64opBne     = 0x42, // jump if the values dont match
+    Pyrix64opJump    = 0x40, // jump unconditional
     Pyrix64opCall    = 0x43, // call a function
     Pyrix64opRet     = 0x44, // return from a function
     Pyrix64opPush    = 0x50, // push a register
@@ -55,7 +53,13 @@ typedef enum
 
     // 64bit instructions
     Pyrix64opPushM   = 0xE0, // push multiple gprs
-    Pyrix64opPopM    = 0xE1  // pop multiple gprs
+    Pyrix64opPopM    = 0xE1, // pop multiple gprs
+    Pyrix64opBeq     = 0xE2, // branch if the registers match
+    Pyrix64opBne     = 0xE3, // branch if the registers differ
+    Pyrix64opBlt     = 0xE4, // branch if signed less than
+    Pyrix64opBge     = 0xE5, // branch if signed greater or equal
+    Pyrix64opBltu    = 0xE6, // branch if unsigned less than
+    Pyrix64opBgeu    = 0xE7  // branch if unsigned greater or equal
 
 } Pyrix64Opcode;
 

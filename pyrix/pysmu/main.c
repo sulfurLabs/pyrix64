@@ -41,19 +41,23 @@ int main(void)
     Pyrix64RamInit(&Ram);
 
     /* custom program till we have a compiler */
+    //random program....
     const uint32_t Program[] =
     {
-        Pyrix64EncodeI(Pyrix64opMovI, 1, 20),
-        Pyrix64EncodeI(Pyrix64opMovI, 2, 6),
-        Pyrix64EncodeR(Pyrix64opAdd, 3, 1, 2),
-        Pyrix64EncodeR(Pyrix64opSub, 4, 1, 2),
-        Pyrix64EncodeR(Pyrix64opAnd, 5, 1, 2),
-        Pyrix64EncodeR(Pyrix64opOr, 6, 1, 2),
-        Pyrix64EncodeR(Pyrix64opXor, 7, 1, 2),
-        Pyrix64EncodeR(Pyrix64opNot, 8, 2, 0),
-        Pyrix64EncodeI(Pyrix64opStore, 1, 0x100),
-        Pyrix64EncodeI(Pyrix64opLoad, 9, 0x100),
-        Pyrix64EncodeI(Pyrix64opHalt, 0, 0)
+        0x20080014, // MOVI r1, 20
+        0x20100006, // MOVI r2, 6
+        0x11184400, // ADD r3
+        0x12204400, // SUB r4
+        0x16408000, // NOT r8
+        0x31080100, // STORE r1 (0x100)
+        0x30480100, // LOAD r9 (0x100)
+        0x20500001, // MOVI r10, 1
+        0x20280003, // MOVI r5, 3
+        0x20300000, // MOVI r6, 0
+        0x11318200, // ADD r6
+        0x12295400, // SUB r5
+        0xE3014000, // BNE r5, r0
+        0x01000000  // HALT
     };
 
     uint32_t ProgramSize = sizeof(Program) / sizeof(Program[0]);

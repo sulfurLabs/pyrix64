@@ -54,4 +54,7 @@
 #define Pyrix64EncodeCall(Target) Pyrix64EncodeI(Pyrix64opCall, 0, (Target))
 #define Pyrix64EncodeRet() Pyrix64EncodeI(Pyrix64opRet, 0, 0)
 
+#define Pyrix64EncodeJump(Target) Pyrix64EncodeI(Pyrix64opJump, 0, (Target))
+#define Pyrix64EncodeBranch(Op, Rs1, Rs2) Pyrix64EncodeR((Op), 0, (Rs1), (Rs2))
+
 #endif /*Pyrix64EncH */

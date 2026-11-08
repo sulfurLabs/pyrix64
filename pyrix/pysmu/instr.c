@@ -651,6 +651,187 @@ static bool Pyrix64InstrRet(
     return true;
 }
 
+//compares 2 signed numbers
+static bool Pyrix64SignedLess(
+    uint64_t A,
+    uint64_t B
+){
+    const uint64_t SignA = A >> 63;
+    const uint64_t SignB = B >> 63;
+
+    if (SignA != SignB)
+    {
+        return SignA == 1;
+    }
+
+    return A < B;
+}
+
+//rs1/2 have the compare values, then the opcode
+// has the condition and we store the target adress in a extra
+// word. but we only check if the branch is taken
+static bool Pyrix64Branch(
+    Pyrix64Cpu *Cpu,
+    uint32_t Instruction,
+    uint32_t ExtWord,
+    bool Take,
+    uint64_t *NextPc
+){
+    (void)Cpu;
+    (void)Instruction;
+
+    if (!Take)
+    {
+        // next pc stays teh same
+        return true;
+    }
+
+    const uint64_t Target = ExtWord;
+
+    if (Target >= Pyrix64RamSize)
+    {
+        printf("::  error: branch target out of range (0x%" PRIX64 ")\n", Target);
+
+        return false;
+    }
+
+    *NextPc = Target;
+
+    return true;
+}
+
+static bool Pyrix64InstrJump(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction,
+    uint32_t ExtWord,
+    uint64_t *NextPc
+){
+    (void)Cpu;
+    (void)Ram;
+    (void)ExtWord;
+
+    const uint64_t Target = Pyrix64DecodeAddress(Instruction);
+
+    if (Target >= Pyrix64RamSize)
+    {
+        printf("::  error: JUMP target out of range (0x%" PRIX64 ")\n", Target);
+
+        return false;
+    }
+
+    *NextPc = Target;
+
+    return true;
+}
+
+//branch if the two registers hold the same bits
+static bool Pyrix64InstrBeq(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction,
+    uint32_t ExtWord,
+    uint64_t *NextPc
+){
+    (void)Ram;
+
+    uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
+    uint8_t Rs2 = Pyrix64DecodeRs2(Instruction);
+
+    bool Take = Pyrix64RegRead(Cpu, Rs1) == Pyrix64RegRead(Cpu, Rs2);
+
+    return Pyrix64Branch(Cpu, Instruction, ExtWord, Take, NextPc);
+}
+
+//branches if the two registers hold different bitd
+static bool Pyrix64InstrBne(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction,
+    uint32_t ExtWord,
+    uint64_t *NextPc
+){
+    (void)Ram;
+
+    uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
+    uint8_t Rs2 = Pyrix64DecodeRs2(Instruction);
+
+    bool Take = Pyrix64RegRead(Cpu, Rs1) != Pyrix64RegRead(Cpu, Rs2);
+
+    return Pyrix64Branch(Cpu, Instruction, ExtWord, Take, NextPc);
+}
+
+//branches if rs1 IS smaller as a SIGNED number
+static bool Pyrix64InstrBlt(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction,
+    uint32_t ExtWord,
+    uint64_t *NextPc
+){
+    (void)Ram;
+
+    uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
+    uint8_t Rs2 = Pyrix64DecodeRs2(Instruction);
+
+    bool Take = Pyrix64SignedLess(Pyrix64RegRead(Cpu, Rs1), Pyrix64RegRead(Cpu, Rs2));
+
+    return Pyrix64Branch(Cpu, Instruction, ExtWord, Take, NextPc);
+}
+
+//branches if rs1 ISNT smaller as a SIGNED number
+static bool Pyrix64InstrBge(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction,
+    uint32_t ExtWord,
+    uint64_t *NextPc
+){
+    (void)Ram;
+
+    uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
+    uint8_t Rs2 = Pyrix64DecodeRs2(Instruction);
+
+    bool Take = !Pyrix64SignedLess(Pyrix64RegRead(Cpu, Rs1), Pyrix64RegRead(Cpu, Rs2));
+
+    return Pyrix64Branch(Cpu, Instruction, ExtWord, Take, NextPc);
+}
+
+//branches if rs1 IS smaller as an UNSIGNED number
+static bool Pyrix64InstrBltu(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction,
+    uint32_t ExtWord,
+    uint64_t *NextPc
+){
+    (void)Ram;
+
+    uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
+    uint8_t Rs2 = Pyrix64DecodeRs2(Instruction);
+
+    bool Take = Pyrix64RegRead(Cpu, Rs1) < Pyrix64RegRead(Cpu, Rs2);
+
+    return Pyrix64Branch(Cpu, Instruction, ExtWord, Take, NextPc);
+}
+
+static bool Pyrix64InstrBgeu(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction,
+    uint32_t ExtWord,
+    uint64_t *NextPc
+){
+    (void)Ram;
+
+    uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
+    uint8_t Rs2 = Pyrix64DecodeRs2(Instruction);
+
+    bool Take = Pyrix64RegRead(Cpu, Rs1) >= Pyrix64RegRead(Cpu, Rs2);
+
+    return Pyrix64Branch(Cpu, Instruction, ExtWord, Take, NextPc);
+}
+
 //dispatch table
 // opcode to instruction
 static const Pyrix64OpFn Pyrix64DispatchTable[0x100] =
@@ -667,12 +848,19 @@ static const Pyrix64OpFn Pyrix64DispatchTable[0x100] =
     [Pyrix64opMovI]    = Pyrix64InstrMovI,
     [Pyrix64opLoad]    = Pyrix64InstrLoad,
     [Pyrix64opStore]   = Pyrix64InstrStore,
+    [Pyrix64opJump]    = Pyrix64InstrJump,
     [Pyrix64opPush]    = Pyrix64InstrPush,
     [Pyrix64opPop]     = Pyrix64InstrPop,
     [Pyrix64opPushFp]  = Pyrix64InstrPushFp,
     [Pyrix64opPopFp]   = Pyrix64InstrPopFp,
     [Pyrix64opPushM]   = Pyrix64InstrPushM,
     [Pyrix64opPopM]    = Pyrix64InstrPopM,
+    [Pyrix64opBeq]     = Pyrix64InstrBeq,
+    [Pyrix64opBne]     = Pyrix64InstrBne,
+    [Pyrix64opBlt]     = Pyrix64InstrBlt,
+    [Pyrix64opBge]     = Pyrix64InstrBge,
+    [Pyrix64opBltu]    = Pyrix64InstrBltu,
+    [Pyrix64opBgeu]    = Pyrix64InstrBgeu,
     [Pyrix64opCall]    = Pyrix64InstrCall,
     [Pyrix64opRet]     = Pyrix64InstrRet
 
