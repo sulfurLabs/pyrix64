@@ -58,26 +58,36 @@ int main(void)
 
     uint32_t ProgramSize = sizeof(Program) / sizeof(Program[0]);
 
+    // program into ram
+    for (uint32_t i = 0; i < ProgramSize; i++)
+    {
+        if (!Pyrix64RamStore32(&Ram, (uint64_t)i * Pyrix64InstrLen32, Program[i]))
+        {
+            printf("::  program does not fit into ram \n");
+
+            return 1;
+        }
+    }
+
     printf("::  pyrix64 pysmu emulator\n");
     printf("::  starting program \n");
 
-    if (!Pyrix64Execute(&Cpu, &Ram, Program, ProgramSize))
+    if (!Pyrix64Execute(&Cpu, &Ram))
     {
         return 1;
     }
 
     printf("==> Program finished\n\n");
 
-    printf(" - R1 = %" PRIu64 "\n", Cpu.Registers[1]);
-    printf(" - R2 = %" PRIu64 "\n", Cpu.Registers[2]);
-    printf(" - R3 = %" PRIu64 "\n", Cpu.Registers[3]);
-    printf(" - R4 = %" PRIu64 "\n", Cpu.Registers[4]);
-    printf(" - R5 = %" PRIu64 "\n", Cpu.Registers[5]);
-    printf(" - R6 = %" PRIu64 "\n", Cpu.Registers[6]);
-    printf(" - R7 = %" PRIu64 "\n", Cpu.Registers[7]);
-
-    printf(" - R8 = 0x%016" PRIX64 "\n", Cpu.Registers[8]);
-    printf(" - R9 = %" PRIu64 "\n", Cpu.Registers[9]);
+    printf("  > R1 = %" PRIu64 "\n",       Cpu.Registers[1]);
+    printf("  > R2 = %" PRIu64 "\n",       Cpu.Registers[2]);
+    printf("  > R3 = %" PRIu64 "\n",       Cpu.Registers[3]);
+    printf("  > R4 = %" PRIu64 "\n",       Cpu.Registers[4]);
+    printf("  > R5 = %" PRIu64 "\n",       Cpu.Registers[5]);
+    printf("  > R6 = %" PRIu64 "\n",       Cpu.Registers[6]);
+    printf("  > R7 = %" PRIu64 "\n",       Cpu.Registers[7]);
+    printf("  > R8 = 0x%016" PRIX64 "\n",  Cpu.Registers[8]);
+    printf("  > R9 = %" PRIu64 "\n",       Cpu.Registers[9]);
 
     return 0;
 }

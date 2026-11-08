@@ -42,6 +42,10 @@ void Pyrix64RamInit(Pyrix64Ram *Ram);
 bool Pyrix64RamLoadByte(Pyrix64Ram *Ram, uint64_t Address, uint8_t *Value);
 bool Pyrix64RamStoreByte(Pyrix64Ram *Ram, uint64_t Address, uint8_t Value);
 
+// 32bit access, little endian
+bool Pyrix64RamLoad32(Pyrix64Ram *Ram, uint64_t Address, uint32_t *Value);
+bool Pyrix64RamStore32(Pyrix64Ram *Ram, uint64_t Address, uint32_t Value);
+
 // 64 bit access, little endian
 bool Pyrix64RamLoad(Pyrix64Ram *Ram, uint64_t Address, uint64_t *Value);
 bool Pyrix64RamStore(Pyrix64Ram *Ram, uint64_t Address, uint64_t Value);

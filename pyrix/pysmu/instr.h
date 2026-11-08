@@ -31,10 +31,14 @@
 
 #include "cpu.h"
 
+//length in bytes
+uint32_t Pyrix64InstructionLength(uint32_t Instruction);
+
 bool Pyrix64DecodeExecute(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 );
 
 #endif /*Pyrix64InstrH */

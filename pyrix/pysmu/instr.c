@@ -35,6 +35,11 @@
 
 /* 31-24  |  23-19   |  18-14   |  13-0
  * opcode | register | reserved | address
+ *
+ * opcode chooses instruction lenth
+ * 32 bit, one word
+ * 64 bit, sec word (in ExtWord)
+ * second word meaning depends on the instruction
  */
 
 #define Pyrix64DecodeOpcode(Instruction)  ((uint8_t)(((Instruction) >> 24) & 0xFFu))
@@ -43,11 +48,26 @@
 #define Pyrix64DecodeRs2(Instruction)     ((uint8_t)(((Instruction) >> 9)  & 0x1Fu))
 #define Pyrix64DecodeAddress(Instruction) ((uint16_t)((Instruction) & 0x3FFFu))
 
+//length in bytes, chosen by the opcode and
+// classic isa is 32 bit but the op64 and up are 64 bit
+uint32_t Pyrix64InstructionLength(uint32_t Instruction)
+{
+    const uint8_t Opcode = Pyrix64DecodeOpcode(Instruction);
+
+    if (Opcode >= Pyrix64Op64Base)
+    {
+        return Pyrix64InstrLen64;
+    }
+
+    return Pyrix64InstrLen32;
+}
+
 // false if error
 typedef bool (*Pyrix64OpFn)(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 );
 
 // 19 bit signed immediate as used by movI
@@ -67,11 +87,13 @@ static int64_t Pyrix64DecodeImmediate(uint32_t Instruction)
 static bool Pyrix64InstrNop(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Cpu;
     (void)Ram;
     (void)Instruction;
+    (void)ExtWord;
 
     return true;
 }
@@ -79,10 +101,12 @@ static bool Pyrix64InstrNop(
 static bool Pyrix64InstrHalt(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Ram;
     (void)Instruction;
+    (void)ExtWord;
 
     Cpu->Halted = true;
 
@@ -92,9 +116,11 @@ static bool Pyrix64InstrHalt(
 static bool Pyrix64InstrMov(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Ram;
+    (void)ExtWord;
 
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
@@ -107,9 +133,11 @@ static bool Pyrix64InstrMov(
 static bool Pyrix64InstrAdd(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Ram;
+    (void)ExtWord;
 
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
@@ -123,9 +151,11 @@ static bool Pyrix64InstrAdd(
 static bool Pyrix64InstrSub(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Ram;
+    (void)ExtWord;
 
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
@@ -139,9 +169,11 @@ static bool Pyrix64InstrSub(
 static bool Pyrix64InstrAnd(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Ram;
+    (void)ExtWord;
 
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
@@ -155,9 +187,11 @@ static bool Pyrix64InstrAnd(
 static bool Pyrix64InstrOr(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Ram;
+    (void)ExtWord;
 
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
@@ -171,9 +205,11 @@ static bool Pyrix64InstrOr(
 static bool Pyrix64InstrXor(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Ram;
+    (void)ExtWord;
 
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
@@ -187,9 +223,11 @@ static bool Pyrix64InstrXor(
 static bool Pyrix64InstrNot(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Ram;
+    (void)ExtWord;
 
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
     uint8_t Rs1 = Pyrix64DecodeRs1(Instruction);
@@ -202,9 +240,11 @@ static bool Pyrix64InstrNot(
 static bool Pyrix64InstrMovI(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Ram;
+    (void)ExtWord;
 
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
 
@@ -216,8 +256,11 @@ static bool Pyrix64InstrMovI(
 static bool Pyrix64InstrLoad(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
+    (void)ExtWord;
+
     uint8_t Rd = Pyrix64DecodeRd(Instruction);
     uint16_t Address = Pyrix64DecodeAddress(Instruction);
     uint64_t Value = 0;
@@ -235,8 +278,11 @@ static bool Pyrix64InstrLoad(
 static bool Pyrix64InstrStore(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
+    (void)ExtWord;
+
     uint8_t Source = Pyrix64DecodeRd(Instruction);
     uint16_t Address = Pyrix64DecodeAddress(Instruction);
 
@@ -307,8 +353,11 @@ static bool Pyrix64StackPop(
 static bool Pyrix64InstrPush(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
+    (void)ExtWord;
+
     const uint8_t Source = Pyrix64DecodeRd(Instruction);
 
     // push r0 is always 0
@@ -319,8 +368,11 @@ static bool Pyrix64InstrPush(
 static bool Pyrix64InstrPop(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
+    (void)ExtWord;
+
     const uint8_t Dest = Pyrix64DecodeRd(Instruction);
     uint64_t Value = 0;
 
@@ -338,9 +390,11 @@ static bool Pyrix64InstrPop(
 static bool Pyrix64InstrPushFp(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Instruction;
+    (void)ExtWord;
 
     //fp doesnt count as gpr, reads and writes directly
     return Pyrix64StackPush(Cpu, Ram, Cpu->Fp);
@@ -350,9 +404,11 @@ static bool Pyrix64InstrPushFp(
 static bool Pyrix64InstrPopFp(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     (void)Instruction;
+    (void)ExtWord;
 
     uint64_t Value = 0;
 
@@ -362,6 +418,20 @@ static bool Pyrix64InstrPopFp(
     }
 
     Cpu->Fp = Value;
+
+    return true;
+}
+
+static bool Pyrix64InstrReserved64(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram,
+    uint32_t Instruction,
+    uint32_t ExtWord
+){
+    (void)Cpu;
+    (void)Ram;
+    (void)Instruction;
+    (void)ExtWord;
 
     return true;
 }
@@ -385,14 +455,16 @@ static const Pyrix64OpFn Pyrix64DispatchTable[0x100] =
     [Pyrix64opPush]   = Pyrix64InstrPush,
     [Pyrix64opPop]    = Pyrix64InstrPop,
     [Pyrix64opPushFp] = Pyrix64InstrPushFp,
-    [Pyrix64opPopFp]  = Pyrix64InstrPopFp
+    [Pyrix64opPopFp]  = Pyrix64InstrPopFp,
+    [Pyrix64opReserved64] = Pyrix64InstrReserved64
 
 };
 
 bool Pyrix64DecodeExecute(
     Pyrix64Cpu *Cpu,
     Pyrix64Ram *Ram,
-    uint32_t Instruction
+    uint32_t Instruction,
+    uint32_t ExtWord
 ){
     uint8_t Opcode = Pyrix64DecodeOpcode(Instruction);
 
@@ -405,5 +477,5 @@ bool Pyrix64DecodeExecute(
         return false;
     }
 
-    return Handler(Cpu, Ram, Instruction);
+    return Handler(Cpu, Ram, Instruction, ExtWord);
 }

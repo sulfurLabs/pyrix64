@@ -135,11 +135,24 @@ void Pyrix64TvecWrite(
     uint64_t Value
 );
 
+//fetches a full instruction at the given pc
+// Word0 is the first word, opcode and fields
+// ExtWord is the second word of a 64 bit instr, 0 for 32 bit instr
+// Length is the instruction length in bytes
+// false if the instruction is not fully in ram
+bool Pyrix64FetchInstruction(
+    Pyrix64Ram *Ram,
+    uint64_t Pc,
+    uint32_t *Word0,
+    uint32_t *ExtWord,
+    uint32_t *Length
+);
+
+//instruction fetch
+// runs the program already loaded in ram, pc is a byte address
 bool Pyrix64Execute(
     Pyrix64Cpu *Cpu,
-    Pyrix64Ram *Ram,
-    const uint32_t *Program,
-    uint32_t ProgramSize
+    Pyrix64Ram *Ram
 );
 
 #endif /*Pyrix64CpuH */

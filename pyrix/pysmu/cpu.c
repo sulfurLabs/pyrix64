@@ -23,6 +23,7 @@
  * https://www.gnu.org/licenses/gpl-3.0.html
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -227,28 +228,74 @@ bool Pyrix64PrivilegeLevelWrite(
 }
 
 //instruction fetch
+// first opcode tells length
+bool Pyrix64FetchInstruction(
+    Pyrix64Ram *Ram,
+    uint64_t Pc,
+    uint32_t *Word0,
+    uint32_t *ExtWord,
+    uint32_t *Length
+){
+    if (!Pyrix64RamLoad32(Ram, Pc, Word0))
+    {
+        return false;
+    }
+
+    *Length = Pyrix64InstructionLength(*Word0);
+
+    if (*Length == Pyrix64InstrLen32)
+    {
+        //32bit no extention word
+        *ExtWord = 0;
+
+        return true;
+    }
+
+    // pc + 4 cant overflow
+    if (!Pyrix64RamLoad32(Ram, Pc + Pyrix64InstrLen32, ExtWord))
+    {
+        printf(":: error: incomplete instruction; no second word (pc 0x%" PRIX64 ")\n", Pc);
+
+        return false;
+    }
+
+    return true;
+}
+
+//instruction fetch
+// instruction fetching
 bool Pyrix64Execute(
     Pyrix64Cpu *Cpu,
-    Pyrix64Ram *Ram,
-    const uint32_t *Program,
-    uint32_t ProgramSize
+    Pyrix64Ram *Ram
 ){
     while (!Cpu->Halted)
     {
         // program counter
-        if (Cpu->Pc >= ProgramSize)
+        if (Cpu->Pc >= Pyrix64RamSize)
         {
             printf("program counter out of range \n");
 
             return false;
         }
 
-        uint32_t Instruction = Program[Cpu->Pc++];
+        uint32_t Word0 = 0;
+        uint32_t ExtWord = 0;
+        uint32_t Length = 0;
 
-        if (!Pyrix64DecodeExecute(Cpu, Ram, Instruction))
+        if (!Pyrix64FetchInstruction(Ram, Cpu->Pc, &Word0, &ExtWord, &Length))
+        {
+            printf(":: error: instruction fetch failed at pc 0x%" PRIX64 " \n", Cpu->Pc);
+
+            return false;
+        }
+
+        if (!Pyrix64DecodeExecute(Cpu, Ram, Word0, ExtWord))
         {
             return false;
         }
+
+        // pc moves only after the instruction ran ok
+        Cpu->Pc += Length;
     }
 
     return true;

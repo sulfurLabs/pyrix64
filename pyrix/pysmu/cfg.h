@@ -52,6 +52,11 @@
 #define Pyrix64StackEntrySize 8
 #define Pyrix64StackAlignment 8
 
+//32, 64 bit
+#define Pyrix64InstrLen32 4
+#define Pyrix64InstrLen64 8
+#define Pyrix64Op64Base 0xE0
+
 #define Pyrix64RamSize 4096
 #define Pyrix64RamAccessSize 8
 

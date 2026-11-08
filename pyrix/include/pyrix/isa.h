@@ -48,7 +48,11 @@ typedef enum
     Pyrix64opPush   = 0x50, // push a register
     Pyrix64opPop    = 0x51, // pop a register
     Pyrix64opPushFp = 0x52, // push the frame pointer
-    Pyrix64opPopFp  = 0x53  // pop the frame pointer
+    Pyrix64opPopFp  = 0x53, // pop the frame pointer
+
+
+    //placeholder for 64 bit instruction length
+    Pyrix64opReserved64 = 0xE0
 
 } Pyrix64Opcode;
 
