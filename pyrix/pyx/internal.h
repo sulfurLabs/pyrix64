@@ -39,12 +39,6 @@ typedef struct
     size_t Capacity;
 } PyxImage;
 
-typedef struct
-{
-    const char *Name;
-    uint32_t Opcode;
-} PyxInstruction;
-
 //format/bin.c
 void PyxImageInit(PyxImage *Image);
 bool PyxImageAppendWord(PyxImage *Image, uint32_t Word);
@@ -55,6 +49,32 @@ void PyxImageFree(PyxImage *Image);
 bool PyxParseFile(
     const char *Path,
     PyxImage *Image
+);
+
+//instr.c
+bool PyxProcessInstruction(
+    const char *File,
+    int LineNumber,
+    const char *Mnemonic,
+    const char *Operands,
+    PyxImage *Image
+);
+
+//operand.c
+bool PyxNextToken(
+    const char **Cursor,
+    char *Token
+);
+int PyxParseRegister(
+    const char *Token
+);
+
+//error.c
+void PyxError(
+    const char *File,
+    int Number,
+    const char *Message,
+    const char *Token
 );
 
 #endif /*p64internalh */
