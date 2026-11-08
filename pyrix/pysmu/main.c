@@ -24,15 +24,51 @@
  */
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "cfg.h"
 #include "cpu.h"
-#include "enc.h"
-#include "pyrix/isa.h"
+#include "instr.h"
+#include "ram.h"
+#include "exec/exec.h"
 
-int main(void)
+static const uint32_t Pyrix64DemoProgramSize =
+    sizeof(Pyrix64DemoProgram) /
+    sizeof(Pyrix64DemoProgram[0])
+;
+
+static void Pyrix64PrintRegisters(const Pyrix64Cpu *Cpu )
+{
+    printf("  > R1 = %" PRIu64 "\n",       Cpu->Registers[1]);
+    printf("  > R2 = %" PRIu64 "\n",       Cpu->Registers[2]);
+    printf("  > R3 = %" PRIu64 "\n",       Cpu->Registers[3]);
+    printf("  > R4 = %" PRIu64 "\n",       Cpu->Registers[4]);
+    printf("  > R5 = %" PRIu64 "\n",       Cpu->Registers[5]);
+    printf("  > R6 = %" PRIu64 "\n",       Cpu->Registers[6]);
+    printf("  > R7 = %" PRIu64 "\n",       Cpu->Registers[7]);
+    printf("  > R8 = 0x%016" PRIX64 "\n",  Cpu->Registers[8]);
+    printf("  > R9 = %" PRIu64 "\n",       Cpu->Registers[9]);
+}
+
+static bool Pyrix64RunCpu(
+    Pyrix64Cpu *Cpu,
+    Pyrix64Ram *Ram
+){
+    if (!Pyrix64Execute(Cpu, Ram))
+    {
+        return false;
+    }
+
+    printf("==> Program finished\n\n");
+    Pyrix64PrintRegisters(Cpu);
+
+    return true;
+}
+
+static bool Pyrix64RunFirmware(const char *Path)
 {
     Pyrix64Cpu Cpu;
     Pyrix64Ram Ram;
@@ -40,58 +76,40 @@ int main(void)
     Pyrix64CpuInit(&Cpu);
     Pyrix64RamInit(&Ram);
 
-    /* custom program till we have a compiler */
-    //random program....
-    const uint32_t Program[] =
-    {
-        0x20080014, // MOVI r1, 20
-        0x20100006, // MOVI r2, 6
-        0x11184400, // ADD r3
-        0x12204400, // SUB r4
-        0x16408000, // NOT r8
-        0x31080100, // STORE r1 (0x100)
-        0x30480100, // LOAD r9 (0x100)
-        0x20500001, // MOVI r10, 1
-        0x20280003, // MOVI r5, 3
-        0x20300000, // MOVI r6, 0
-        0x11318200, // ADD r6
-        0x12295400, // SUB r5
-        0xE3014000, // BNE r5, r0
-        0x01000000  // HALT
-    };
-
-    uint32_t ProgramSize = sizeof(Program) / sizeof(Program[0]);
-
-    // program into ram
-    for (uint32_t i = 0; i < ProgramSize; i++)
-    {
-        if (!Pyrix64RamStore32(&Ram, (uint64_t)i * Pyrix64InstrLen32, Program[i]))
-        {
-            printf("::  program does not fit into ram \n");
-
-            return 1;
-        }
-    }
-
     printf("::  pyrix64 pysmu emulator\n");
-    printf("::  starting program \n");
+    printf("::  loading firmware '%s'\n", Path);
 
-    if (!Pyrix64Execute(&Cpu, &Ram))
+    if (!Pyrix64ExecLoad(Path, &Ram))
     {
-        return 1;
+        return false;
     }
 
-    printf("==> Program finished\n\n");
+    printf("::  starting program... \n");
 
-    printf("  > R1 = %" PRIu64 "\n",       Cpu.Registers[1]);
-    printf("  > R2 = %" PRIu64 "\n",       Cpu.Registers[2]);
-    printf("  > R3 = %" PRIu64 "\n",       Cpu.Registers[3]);
-    printf("  > R4 = %" PRIu64 "\n",       Cpu.Registers[4]);
-    printf("  > R5 = %" PRIu64 "\n",       Cpu.Registers[5]);
-    printf("  > R6 = %" PRIu64 "\n",       Cpu.Registers[6]);
-    printf("  > R7 = %" PRIu64 "\n",       Cpu.Registers[7]);
-    printf("  > R8 = 0x%016" PRIX64 "\n",  Cpu.Registers[8]);
-    printf("  > R9 = %" PRIu64 "\n",       Cpu.Registers[9]);
+    return Pyrix64RunCpu(&Cpu, &Ram);
+}
 
-    return 0;
+//prints the help text
+static void Pyrix64PrintUsage(void)
+{
+    printf("PYriX64 pysmu emulator (%s)\n", PYSMVER);
+    printf("\n");
+    printf("usage: pysmu [\n");
+    printf("    --fw program.bin\n");
+    printf("]\n");
+    printf("\n");
+    printf("a fw needs to be specified\n");
+}
+
+int main(int Argc, char **Argv)
+{
+    if (Argc == 3 && strcmp(Argv[1], "--fw") == 0)
+    {
+        return Pyrix64RunFirmware(Argv[2]) ? 0 : 1;
+    }
+
+    Pyrix64PrintUsage();
+    fprintf(stderr, "::  aerror: expected 'pysmu --fw <program.bin>'\n");
+
+    return 1;
 }

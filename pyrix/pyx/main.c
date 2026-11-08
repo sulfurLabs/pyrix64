@@ -25,18 +25,26 @@
 
 #include <stdio.h>
 
-#include "cfg.h"
+#include "internal.h"
 
-int PyxMain(void)
+int main(int argc, char **argv)
 {
-    printf("PYriX64 assembler\n");
-    printf("pyx\n");
-    printf("%s", PYXVER);
+    PyxImage Image;
+    bool Ok;
 
-    return 0;
-}
+    if (argc != 3)
+    {
+        fprintf(stderr, "usage: pyx input.pyx output.bin\n");
+        return 1;
+    }
 
-int main(void)
-{
-    return PyxMain();
+    PyxImageInit(&Image);
+
+    Ok = PyxParseFile(argv[1], &Image);
+
+    if (Ok) Ok = PyxImageWrite(argv[2], &Image);
+
+    PyxImageFree(&Image);
+
+    return Ok ? 0 : 1;
 }

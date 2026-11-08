@@ -26,6 +26,14 @@
 #ifndef p64cfgh
 #define p64cfgh 1
 
-#define PYXVER "v0.0.1"
+// supermajor release
+// major release
+// release
+//              sm.m.r
+#define PYXVER "v0.0.2"
+
+#define PYX_LINE_LEN 1024
+#define PYX_TOKEN_LEN 32
+#define PYX_OPERAND_COUNT 3
 
 #endif /*p64cfgh */

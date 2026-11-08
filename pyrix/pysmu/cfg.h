@@ -26,7 +26,7 @@
 #ifndef p64cfgh
 #define p64cfgh 1
 
-#define PYSMVER "v0.0.1"
+#define PYSMVER "v0.1.0"
 
 //general purpose registers
 #define Pyrix64RegisterCount 32
@@ -59,5 +59,8 @@
 
 #define Pyrix64RamSize 4096
 #define Pyrix64RamAccessSize 8
+
+//literally 0x0000
+#define Pyrix64ProgramStart 0
 
 #endif /*p64cfgh */

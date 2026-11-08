@@ -26,7 +26,8 @@
 include ../../common.mk
 
 TARGET := $(BUILD_DIR)/pysmu/pysmu
-SOURCES := main.c cpu.c instr.c ram.c
+SOURCES := main.c cpu.c instr.c ram.c exec/bin.c
+CPPFLAGS += -I$(ROOT_DIR)/pyrix/pysmu
 
 .PHONY: all clean
 
