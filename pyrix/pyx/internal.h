@@ -5,7 +5,7 @@
  *
  * PROJECT: pyrix64 - pyx
  * FILE: internal.h
- * DESC.: shared pyx internals (image and parser interface)
+ * DESC.: header for all files in this directory, or whatever
  *
  * This file is part of pyrix64.
  *
@@ -23,8 +23,8 @@
  * https://www.gnu.org/licenses/gpl-3.0.html
  */
 
-#ifndef p64internalh
-#define p64internalh 1
+#ifndef pyx64InternalH
+#define pyx64InternalH 1
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -77,4 +77,4 @@ void PyxError(
     const char *Token
 );
 
-#endif /*p64internalh */
+#endif /*pyx64InternalH */

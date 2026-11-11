@@ -23,8 +23,8 @@
  * https://www.gnu.org/licenses/gpl-3.0.html
  */
 
-#ifndef p64cfgh
-#define p64cfgh 1
+#ifndef pyx64CfgH
+#define pyx64CfgH 1
 
 // supermajor release
 // major release
@@ -36,4 +36,4 @@
 #define PYX_TOKEN_LEN 32
 #define PYX_OPERAND_COUNT 3
 
-#endif /*p64cfgh */
+#endif /*pyx64CfgH*/

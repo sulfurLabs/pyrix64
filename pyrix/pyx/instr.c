@@ -5,7 +5,7 @@
  *
  * PROJECT: pyrix64 - pyx
  * FILE: instr.c
- * DESC.: pyx assembler instruction handling file
+ * DESC.: pyx assembler instruction table and dispatch
  *
  * This file is part of pyrix64.
  *
@@ -28,19 +28,22 @@
 
 #include "pyrix/isa.h"
 #include "internal.h"
+#include "instr/instr.h"
 
-//one instruction definition: its name and opcode
+//one instruction definition:
+// its name and implementation
 typedef struct
 {
     const char *Name;
-    uint32_t Opcode;
+    PyxInstrFn *Run;
 } PyxInstruction;
 
 //instructions are always uppercase in pyx
 static const PyxInstruction PyxInstructionTable[] =
 {
-    { "ADD", Pyrix64opAdd },
-    { "SUB", Pyrix64opSub }
+    { "ADD", PyxInstrAdd },
+    { "SUB", PyxInstrSub },
+    { "MOV", PyxInstrMov }
 };
 
 static bool PyxStrCaseEq(
@@ -82,16 +85,6 @@ static const PyxInstruction *PyxLookupInstruction(
     return NULL;
 }
 
-static uint32_t PyxEncode(uint32_t Opcode, int Rd, int Rs1, int Rs2)
-{
-    return (
-        (Opcode << 24) |
-        ((uint32_t)Rd << 19) |
-        ((uint32_t)Rs1 << 14) |
-        ((uint32_t)Rs2 << 9)
-    );
-}
-
 bool PyxProcessInstruction(
     const char *File,
     int LineNumber,
@@ -100,10 +93,6 @@ bool PyxProcessInstruction(
     PyxImage *Image
 ){
     const PyxInstruction *Instruction = PyxLookupInstruction(Mnemonic);
-    const char *Cursor = Operands;
-    char Token[PYX_TOKEN_LEN];
-    int Registers[PYX_OPERAND_COUNT];
-    int Count = 0;
 
     if (Instruction == NULL)
     {
@@ -111,46 +100,5 @@ bool PyxProcessInstruction(
         return false;
     }
 
-    while (PyxNextToken(&Cursor, Token))
-    {
-        if (Count >= PYX_OPERAND_COUNT)
-        {
-            PyxError(File, LineNumber, "Expected exactly three register operands", NULL);
-            return false;
-        }
-
-        Registers[Count++] = PyxParseRegister(Token);
-
-        if (Registers[Count - 1] < 0)
-        {
-            PyxError(File, LineNumber, "Invalid register", Token);
-            return false;
-        }
-    }
-
-    if (Count != PYX_OPERAND_COUNT)
-    {
-        PyxError(File, LineNumber, "Expected exactly three register operands", NULL);
-        return false;
-    }
-    if (!PyxImageAppendWord(
-            Image,
-            PyxEncode(
-                Instruction->Opcode,
-                Registers[0],
-                Registers[1],
-                Registers[2]
-            )
-        )
-    ) return false;
-
-    printf(
-        "Parsed %s: rd=r%d, rs1=r%d, rs2=r%d\n",
-        Instruction->Name,
-        Registers[0],
-        Registers[1],
-        Registers[2]
-    );
-
-    return true;
+    return Instruction->Run(File, LineNumber, Operands, Image);
 }
