@@ -35,11 +35,6 @@
 #include "ram.h"
 #include "exec/exec.h"
 
-static const uint32_t Pyrix64DemoProgramSize =
-    sizeof(Pyrix64DemoProgram) /
-    sizeof(Pyrix64DemoProgram[0])
-;
-
 static void Pyrix64PrintRegisters(const Pyrix64Cpu *Cpu )
 {
     printf("  > R1 = %" PRIu64 "\n",       Cpu->Registers[1]);

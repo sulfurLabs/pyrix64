@@ -26,7 +26,23 @@
 include ../../common.mk
 
 TARGET := $(BUILD_DIR)/pyx/pyx
-SOURCES := main.c parser.c instr.c operand.c error.c instr/formats.c instr/add.c instr/sub.c instr/mov.c format/bin.c
+SOURCES := \
+	main.c \
+	parser.c \
+	instr.c \
+	operand.c \
+	error.c \
+	instr/formats.c \
+	instr/add.c \
+	instr/sub.c \
+	instr/mov.c \
+	instr/nop.c \
+	instr/halt.c \
+	instr/movi.c \
+	instr/and.c \
+	instr/or.c \
+	format/bin.c
+
 CPPFLAGS += -I$(ROOT_DIR)/pyrix/pyx
 
 .PHONY: all clean

@@ -43,7 +43,12 @@ static const PyxInstruction PyxInstructionTable[] =
 {
     { "ADD", PyxInstrAdd },
     { "SUB", PyxInstrSub },
-    { "MOV", PyxInstrMov }
+    { "MOV", PyxInstrMov },
+    { "NOP", PyxInstrNop },
+    { "HALT", PyxInstrHalt },
+    { "MOVI", PyxInstrMovi },
+    { "AND", PyxInstrAnd },
+    { "OR", PyxInstrOr }
 };
 
 static bool PyxStrCaseEq(

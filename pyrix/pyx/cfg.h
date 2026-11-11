@@ -31,6 +31,7 @@
 // release
 //              sm.m.r
 #define PYXVER "v0.0.2"
+#define COMPILINGSTAT 1 // status of what is compiled (info)
 
 #define PYX_LINE_LEN 1024
 #define PYX_TOKEN_LEN 32

@@ -5,7 +5,7 @@
  *
  * PROJECT: pyrix64 - pyx
  * FILE: sub.c
- * DESC.: SUB
+ * DESC.: SUB instr
  *
  * This file is part of pyrix64.
  *

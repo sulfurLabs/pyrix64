@@ -5,7 +5,7 @@
  *
  * PROJECT: pyrix64 - pyx
  * FILE: mov.c
- * DESC.: MOV
+ * DESC.: MOV instr
  *
  * This file is part of pyrix64.
  *

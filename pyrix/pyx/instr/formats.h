@@ -35,6 +35,16 @@
 #define PYX_IMM_MAX ((1 << (PYX_IMM_BITS - 1)) - 1)
 #define PYX_IMM_MIN (-(1 << (PYX_IMM_BITS - 1)))
 
+// opcode | none
+bool PyxFormatNone(
+    const char *File,
+    int Number,
+    const char *Mnemonic,
+    const char *Operands,
+    uint32_t Opcode,
+    PyxImage *Image
+);
+
 //opcode | rd | rs1 | rs2
 bool PyxFormatRegisters3(
     const char *File,

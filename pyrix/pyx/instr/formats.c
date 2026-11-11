@@ -54,6 +54,13 @@ static uint32_t PyxEncodeImmediateFormat(uint32_t Opcode, int Rd, long Imm)
     );
 }
 
+// 31-24  |
+// opcode |
+static uint32_t PyxEncodeNoneFormat(uint32_t Opcode)
+{
+    return (Opcode << 24);
+}
+
 static bool PyxParseRegisterOperands(
     const char *File,
     int Number,
@@ -88,6 +95,44 @@ static bool PyxParseRegisterOperands(
 }
 
 //formats
+
+// just opcode
+bool PyxFormatNone(
+    const char *File,
+    int Number,
+    const char *Mnemonic,
+    const char *Operands,
+    uint32_t Opcode,
+    PyxImage *Image
+){
+    char Token[PYX_TOKEN_LEN];
+    const char *Cursor = Operands;
+
+    // no operand allowed
+    if (PyxNextToken(&Cursor, Token))
+    {
+        PyxError(File, Number, "Expected no operands ", Token);
+
+        return false;
+    }
+
+    if (
+        !PyxImageAppendWord
+        (
+            Image,
+            PyxEncodeNoneFormat(Opcode)
+        )
+    ) return false;
+
+    #if COMPILINGSTAT == 1
+        printf(
+            "::  info: Parsed %s\n",
+            Mnemonic
+        );
+    #endif
+
+    return true;
+}
 
 bool PyxFormatRegisters3(
     const char *File,
@@ -124,13 +169,15 @@ bool PyxFormatRegisters3(
         )
     ) return false;
 
-    printf(
-        "::  info: Parsed %s: rd=r%d, rs1=r%d, rs2=r%d\n",
-        Mnemonic,
-        Registers[0],
-        Registers[1],
-        Registers[2]
-    );
+    #if COMPILINGSTAT == 1
+        printf(
+            "::  info: Parsed %s: rd=r%d, rs1=r%d, rs2=r%d\n",
+            Mnemonic,
+            Registers[0],
+            Registers[1],
+            Registers[2]
+        );
+    #endif
 
     return true;
 }
@@ -170,12 +217,14 @@ bool PyxFormatRegisters2(
         )
     ) return false;
 
-    printf(
-        "::  info: Parsed %s: rd=r%d, rs=r%d\n",
-        Mnemonic,
-        Registers[0],
-        Registers[1]
-    );
+    #if COMPILINGSTAT == 1
+        printf(
+            "::  info: Parsed %s: rd=r%d, rs=r%d\n",
+            Mnemonic,
+            Registers[0],
+            Registers[1]
+        );
+    #endif
 
     return true;
 }
@@ -247,12 +296,14 @@ bool PyxFormatImmediate(
         )
     ) return false;
 
-    printf(
-        "::  info: Parsed %s: rd=r%d, imm=%ld\n",
-        Mnemonic,
-        Rd,
-        Value
-    );
+    #if COMPILINGSTAT == 1
+        printf(
+            "::  info: Parsed %s: rd=r%d, imm=%ld\n",
+            Mnemonic,
+            Rd,
+            Value
+        );
+    #endif
 
     return true;
 }

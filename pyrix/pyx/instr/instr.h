@@ -55,5 +55,35 @@ bool PyxInstrMov(
     const char *Operands,
     PyxImage *Image
 );
+bool PyxInstrNop(
+    const char *File,
+    int LineNumber,
+    const char *Operands,
+    PyxImage *Image
+);
+bool PyxInstrHalt(
+    const char *File,
+    int LineNumber,
+    const char *Operands,
+    PyxImage *Image
+);
+bool PyxInstrMovi(
+    const char *File,
+    int LineNumber,
+    const char *Operands,
+    PyxImage *Image
+);
+bool PyxInstrAnd(
+    const char *File,
+    int LineNumber,
+    const char *Operands,
+    PyxImage *Image
+);
+bool PyxInstrOr(
+    const char *File,
+    int LineNumber,
+    const char *Operands,
+    PyxImage *Image
+);
 
 #endif /*pyx64InstrH */
